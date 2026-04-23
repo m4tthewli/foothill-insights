@@ -1,0 +1,1039 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Foothill Insights — Student Workload & Course Data</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+  :root {
+    --green: #1a4f2e;
+    --green-light: #2d7a4a;
+    --green-pale: #e8f4ed;
+    --green-mid: #5DCAA5;
+    --accent: #f4a636;
+    --red: #e24b4a;
+    --blue: #378ADD;
+    --text: #1a1a1a;
+    --text-2: #555;
+    --text-3: #888;
+    --bg: #f7f8f5;
+    --surface: #ffffff;
+    --border: rgba(0,0,0,0.08);
+    --border-strong: rgba(0,0,0,0.14);
+    --radius: 12px;
+    --radius-sm: 8px;
+    --font: 'DM Sans', sans-serif;
+    --mono: 'DM Mono', monospace;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--text);
+    font-size: 15px;
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  /* ── NAV ── */
+  nav {
+    background: var(--green);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 2rem;
+    height: 60px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+
+  .nav-brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    text-decoration: none;
+  }
+
+  .nav-logo {
+    width: 34px; height: 34px;
+    background: var(--accent);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 600; font-size: 13px; color: #fff;
+    letter-spacing: -0.3px;
+    flex-shrink: 0;
+  }
+
+  .nav-name { font-size: 15px; font-weight: 600; color: #fff; letter-spacing: -0.2px; }
+  .nav-sub { font-size: 11px; color: rgba(255,255,255,0.5); }
+
+  .nav-links {
+    display: flex;
+    gap: 4px;
+  }
+
+  .nav-link {
+    font-size: 13px;
+    padding: 7px 14px;
+    border-radius: 8px;
+    border: none;
+    background: transparent;
+    color: rgba(255,255,255,0.65);
+    cursor: pointer;
+    font-family: var(--font);
+    transition: all 0.15s;
+    letter-spacing: -0.1px;
+  }
+
+  .nav-link:hover { background: rgba(255,255,255,0.1); color: #fff; }
+  .nav-link.active { background: rgba(255,255,255,0.15); color: #fff; }
+
+  /* ── HERO ── */
+  .hero {
+    background: var(--green);
+    padding: 3rem 2rem 3.5rem;
+    color: #fff;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero::before {
+    content: '';
+    position: absolute;
+    right: -60px; top: -60px;
+    width: 320px; height: 320px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.03);
+  }
+
+  .hero::after {
+    content: '';
+    position: absolute;
+    right: 80px; bottom: -80px;
+    width: 200px; height: 200px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.04);
+  }
+
+  .hero-inner { max-width: 900px; margin: 0 auto; position: relative; z-index: 1; }
+  .hero-eyebrow { font-size: 11px; font-weight: 500; color: var(--accent); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 10px; font-family: var(--mono); }
+  .hero h1 { font-size: 32px; font-weight: 600; letter-spacing: -0.5px; margin-bottom: 10px; line-height: 1.2; }
+  .hero p { font-size: 15px; color: rgba(255,255,255,0.65); max-width: 500px; line-height: 1.7; margin-bottom: 2rem; }
+
+  .hero-stats {
+    display: flex; gap: 2.5rem; flex-wrap: wrap;
+  }
+
+  .hero-stat-val { font-size: 26px; font-weight: 600; color: #fff; letter-spacing: -0.5px; font-family: var(--mono); }
+  .hero-stat-lbl { font-size: 11px; color: rgba(255,255,255,0.45); margin-top: 2px; text-transform: uppercase; letter-spacing: 0.05em; }
+
+  /* ── LAYOUT ── */
+  .page { display: none; max-width: 900px; margin: 0 auto; padding: 2rem; }
+  .page.active { display: block; }
+
+  /* ── CARDS ── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.25rem 1.5rem;
+  }
+
+  .card-title { font-size: 13px; font-weight: 500; color: var(--text); margin-bottom: 3px; }
+  .card-sub { font-size: 12px; color: var(--text-3); margin-bottom: 14px; }
+
+  /* ── METRICS ── */
+  .metric-grid { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 12px; margin-bottom: 1.5rem; }
+
+  .metric {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px 18px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .metric::before {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 3px;
+    background: var(--green);
+    border-radius: 0 0 var(--radius) var(--radius);
+  }
+
+  .metric-val { font-size: 26px; font-weight: 600; color: var(--text); letter-spacing: -0.5px; font-family: var(--mono); }
+  .metric-lbl { font-size: 12px; color: var(--text-3); margin-top: 4px; }
+  .metric-delta { font-size: 11px; margin-top: 6px; font-family: var(--mono); }
+  .delta-up { color: var(--red); }
+  .delta-dn { color: var(--green-mid); }
+
+  /* ── CHART GRID ── */
+  .chart-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 1.5rem; }
+
+  .legend { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 10px; }
+  .legend span { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--text-3); }
+  .lsq { width: 9px; height: 9px; border-radius: 2px; flex-shrink: 0; }
+
+  /* ── INSIGHT ROWS ── */
+  .insight-row {
+    display: flex; align-items: flex-start; gap: 12px;
+    font-size: 13px; color: var(--text); line-height: 1.6;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .insight-row:last-child { border-bottom: none; padding-bottom: 0; }
+
+  .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 5px; }
+
+  /* ── FILTERS ── */
+  .filter-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 1.25rem; }
+  .filter-label { font-size: 12px; color: var(--text-3); }
+
+  .chip {
+    font-size: 12px; padding: 5px 14px;
+    border-radius: 999px;
+    border: 1px solid var(--border-strong);
+    background: var(--surface);
+    color: var(--text-2);
+    cursor: pointer;
+    font-family: var(--font);
+    transition: all 0.15s;
+  }
+
+  .chip:hover { border-color: var(--green); color: var(--green); }
+  .chip.active { background: var(--green); color: #fff; border-color: var(--green); }
+
+  /* ── FORM ── */
+  .form-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 2rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .form-title { font-size: 17px; font-weight: 600; color: var(--text); margin-bottom: 4px; letter-spacing: -0.2px; }
+  .form-sub { font-size: 13px; color: var(--text-3); margin-bottom: 1.5rem; line-height: 1.6; }
+
+  .field { margin-bottom: 1.25rem; }
+  .field label { display: block; font-size: 12px; font-weight: 500; color: var(--text-2); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.04em; }
+
+  .field input, .field select, .field textarea {
+    width: 100%; font-size: 14px;
+    padding: 9px 12px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-strong);
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font);
+    outline: none;
+    transition: border-color 0.15s;
+  }
+
+  .field input:focus, .field select:focus, .field textarea:focus {
+    border-color: var(--green);
+  }
+
+  .field textarea { height: 80px; resize: vertical; }
+
+  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+  .slider-row { display: flex; align-items: center; gap: 12px; }
+  .slider-row input[type=range] { flex: 1; accent-color: var(--green); }
+  .slider-cap { font-size: 11px; color: var(--text-3); flex-shrink: 0; }
+  .slider-val { font-size: 14px; font-weight: 600; min-width: 42px; text-align: right; color: var(--text); font-family: var(--mono); }
+
+  .tag-area { margin-top: 6px; display: flex; flex-wrap: wrap; gap: 6px; }
+
+  .tag {
+    font-size: 12px; padding: 4px 11px;
+    border-radius: 999px;
+    cursor: pointer;
+    border: 1px solid var(--border-strong);
+    background: var(--bg);
+    color: var(--text-2);
+    transition: all 0.15s;
+    user-select: none;
+  }
+
+  .tag:hover { border-color: var(--green); color: var(--green); }
+  .tag.sel { background: var(--green); color: #fff; border-color: var(--green); }
+
+  .submit-btn {
+    background: var(--green);
+    color: #fff;
+    border: none;
+    padding: 11px 28px;
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    font-family: var(--font);
+    transition: opacity 0.15s;
+    letter-spacing: -0.1px;
+  }
+
+  .submit-btn:hover { opacity: 0.88; }
+  .submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .anon-note { font-size: 12px; color: var(--text-3); }
+
+  /* ── BANNER ── */
+  .banner {
+    border-radius: var(--radius-sm);
+    padding: 12px 16px;
+    margin-bottom: 1.25rem;
+    font-size: 13px;
+    display: none;
+  }
+
+  .banner.success { background: var(--green-pale); color: var(--green); border: 1px solid rgba(26,79,46,0.2); }
+  .banner.error { background: #fff5f5; color: #c0392b; border: 1px solid rgba(192,57,43,0.2); }
+
+  /* ── EXPLORER ── */
+  .search-bar { width: 100%; font-size: 14px; padding: 11px 16px; border-radius: var(--radius); border: 1px solid var(--border-strong); background: var(--surface); color: var(--text); font-family: var(--font); outline: none; margin-bottom: 1.25rem; transition: border-color 0.15s; }
+  .search-bar:focus { border-color: var(--green); }
+
+  .course-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.25rem;
+    display: flex;
+    gap: 1.25rem;
+    align-items: flex-start;
+    margin-bottom: 10px;
+    transition: border-color 0.15s;
+  }
+
+  .course-card:hover { border-color: var(--border-strong); }
+
+  .course-code { font-size: 13px; font-weight: 600; color: var(--text); font-family: var(--mono); }
+  .course-dept-badge { font-size: 10px; padding: 2px 7px; border-radius: 999px; margin-top: 4px; display: inline-block; }
+  .badge-stem { background: #e8f4fb; color: #185fa5; }
+  .badge-humanities { background: var(--green-pale); color: var(--green); }
+  .badge-mixed { background: #fff8ee; color: #854f0b; }
+
+  .course-divider { width: 1px; background: var(--border); flex-shrink: 0; align-self: stretch; }
+
+  .course-detail { flex: 1; }
+  .course-name { font-size: 14px; font-weight: 500; margin-bottom: 10px; color: var(--text); }
+
+  .course-stats { display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 10px; }
+  .course-stat-lbl { font-size: 11px; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.04em; }
+  .course-stat-val { font-size: 15px; font-weight: 600; font-family: var(--mono); margin-top: 1px; }
+
+  .course-tip { background: var(--bg); border-radius: var(--radius-sm); padding: 10px 12px; font-size: 12px; color: var(--text-2); line-height: 1.6; border-left: 3px solid var(--green); border-radius: 0 var(--radius-sm) var(--radius-sm) 0; }
+
+  /* ── SECTION LABEL ── */
+  .section-label { font-size: 11px; font-weight: 500; color: var(--text-3); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 10px; font-family: var(--mono); }
+
+  /* ── LOADING ── */
+  .loading { text-align: center; padding: 3rem; color: var(--text-3); font-size: 13px; }
+  .spinner { width: 24px; height: 24px; border: 2px solid var(--border); border-top-color: var(--green); border-radius: 50%; animation: spin 0.7s linear infinite; margin: 0 auto 12px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── SETUP BANNER ── */
+  .setup-notice {
+    background: #fffbf0;
+    border: 1px solid #f4a636;
+    border-radius: var(--radius);
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 1.5rem;
+    font-size: 13px;
+    color: #7a4f00;
+    line-height: 1.7;
+  }
+
+  .setup-notice strong { font-weight: 600; }
+  .setup-notice code { font-family: var(--mono); background: rgba(0,0,0,0.06); padding: 1px 5px; border-radius: 4px; font-size: 12px; }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 640px) {
+    .metric-grid { grid-template-columns: 1fr 1fr; }
+    .chart-grid { grid-template-columns: 1fr; }
+    .field-row { grid-template-columns: 1fr; }
+    nav { padding: 0 1rem; }
+    .nav-links { gap: 2px; }
+    .nav-link { padding: 6px 10px; font-size: 12px; }
+    .hero { padding: 2rem 1rem 2.5rem; }
+    .page { padding: 1.25rem 1rem; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ══════════════ NAV ══════════════ -->
+<nav>
+  <a class="nav-brand" href="#">
+    <div class="nav-logo">FH</div>
+    <div>
+      <div class="nav-name">Foothill Insights</div>
+      <div class="nav-sub">Student-powered course data</div>
+    </div>
+  </a>
+  <div class="nav-links">
+    <button class="nav-link active" onclick="showPage('dashboard',this)">Dashboard</button>
+    <button class="nav-link" onclick="showPage('submit',this)">Share your data</button>
+    <button class="nav-link" onclick="showPage('explorer',this)">Course explorer</button>
+  </div>
+</nav>
+
+<!-- ══════════════ HERO ══════════════ -->
+<div class="hero">
+  <div class="hero-inner">
+    <div class="hero-eyebrow">Foothill College · Los Altos Hills, CA</div>
+    <h1>Course insights from<br>your fellow students</h1>
+    <p>Real workload data, stress levels, and advice from Foothill students. Plan smarter — know what you're signing up for before week 1.</p>
+    <div class="hero-stats">
+      <div>
+        <div class="hero-stat-val" id="stat-responses">—</div>
+        <div class="hero-stat-lbl">Student responses</div>
+      </div>
+      <div>
+        <div class="hero-stat-val">62</div>
+        <div class="hero-stat-lbl">Courses tracked</div>
+      </div>
+      <div>
+        <div class="hero-stat-val" id="stat-term">Spring '25</div>
+        <div class="hero-stat-lbl">Latest term</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ SETUP NOTICE ══════════════ -->
+<div id="setup-notice" class="setup-notice" style="max-width:900px;margin:1.5rem auto 0;display:none">
+  <strong>⚡ Setup required — connect your Supabase database</strong><br>
+  Open <code>index.html</code> and find the <code>SUPABASE_URL</code> and <code>SUPABASE_ANON_KEY</code> constants near the top of the script. Replace them with your project values from <a href="https://supabase.com/dashboard" target="_blank" style="color:inherit">supabase.com/dashboard</a> → Settings → API. See <code>SETUP.md</code> for the full step-by-step guide.
+</div>
+
+<!-- ══════════════ DASHBOARD ══════════════ -->
+<div id="page-dashboard" class="page active">
+
+  <div class="filter-row" style="margin-top:0.5rem">
+    <span class="filter-label">Filter:</span>
+    <button class="chip active" onclick="setFilter('all',this)">All students</button>
+    <button class="chip" onclick="setFilter('stem',this)">STEM</button>
+    <button class="chip" onclick="setFilter('arts',this)">Humanities</button>
+    <button class="chip" onclick="setFilter('mixed',this)">Mixed</button>
+  </div>
+
+  <p class="section-label">Term overview</p>
+  <div class="metric-grid">
+    <div class="metric">
+      <div class="metric-val" id="m-gpa">—</div>
+      <div class="metric-lbl">Avg GPA</div>
+      <div class="metric-delta delta-dn" id="m-gpa-d"></div>
+    </div>
+    <div class="metric">
+      <div class="metric-val" id="m-hrs">—</div>
+      <div class="metric-lbl">Weekly study hours</div>
+      <div class="metric-delta delta-up" id="m-hrs-d"></div>
+    </div>
+    <div class="metric">
+      <div class="metric-val" id="m-stress">—</div>
+      <div class="metric-lbl">Avg stress level</div>
+      <div class="metric-delta delta-up" id="m-stress-d"></div>
+    </div>
+    <div class="metric">
+      <div class="metric-val" id="m-drop">—</div>
+      <div class="metric-lbl">Drop rate</div>
+      <div class="metric-delta delta-up" id="m-drop-d"></div>
+    </div>
+  </div>
+
+  <div class="chart-grid">
+    <div class="card">
+      <p class="card-title">Stress by course load</p>
+      <p class="card-sub">Avg stress (1–10) vs number of courses taken</p>
+      <div class="legend">
+        <span><span class="lsq" style="background:#378ADD"></span>STEM</span>
+        <span><span class="lsq" style="background:#1D9E75"></span>Humanities</span>
+        <span><span class="lsq" style="background:#D4537E"></span>Mixed</span>
+      </div>
+      <div style="position:relative;height:190px"><canvas id="stressChart" role="img" aria-label="Stress increases with course load, especially for STEM students">STEM students taking 3+ courses average 8.2 stress.</canvas></div>
+    </div>
+    <div class="card">
+      <p class="card-title">Grade distribution</p>
+      <p class="card-sub">Students by grade band this term</p>
+      <div class="legend">
+        <span><span class="lsq" style="background:#1a4f2e"></span>Selected filter</span>
+        <span><span class="lsq" style="background:#c8d8c8"></span>Overall avg</span>
+      </div>
+      <div style="position:relative;height:190px"><canvas id="gradeChart" role="img" aria-label="Grade distribution shows most students earn B grades">Most students earn B grades (34%).</canvas></div>
+    </div>
+    <div class="card">
+      <p class="card-title">Study hours through the term</p>
+      <p class="card-sub">When Foothill students work hardest</p>
+      <div class="legend">
+        <span><span class="lsq" style="background:#378ADD"></span>Study hours</span>
+        <span><span class="lsq" style="background:#E24B4A"></span>Exam weeks</span>
+      </div>
+      <div style="position:relative;height:190px"><canvas id="hoursChart" role="img" aria-label="Study hours peak during midterms and finals weeks">Study spikes at midterms (week 7) and finals (week 15).</canvas></div>
+    </div>
+    <div class="card">
+      <p class="card-title">Hardest course combos</p>
+      <p class="card-sub">Avg stress for common pairings at Foothill</p>
+      <div style="position:relative;height:320px"><canvas id="comboChart" role="img" aria-label="CS 1A + Math 1A is the most stressful combination at 8.4">CS 1A + Math 1A is most stressful at 8.4/10.</canvas></div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:1.5rem">
+    <p class="section-label" style="margin-bottom:6px">Key insights from Foothill students</p>
+    <div id="insights-container">
+      <div class="insight-row"><span class="dot" style="background:#e24b4a"></span><span>Students taking <strong>3+ STEM courses</strong> report <strong>40% higher stress</strong> (8.2 vs 5.9 avg) and study 6+ more hours per week.</span></div>
+      <div class="insight-row"><span class="dot" style="background:#BA7517"></span><span><strong>Week 7 (midterms)</strong> and <strong>week 15 (finals)</strong> are the toughest — average study hours nearly double those weeks.</span></div>
+      <div class="insight-row"><span class="dot" style="background:#1a4f2e"></span><span>The <strong>CS 1A + Math 1A</strong> combo is the hardest pairing at Foothill (8.4/10 stress). Swapping one for an elective drops it to 6.1.</span></div>
+      <div class="insight-row"><span class="dot" style="background:#7F77DD"></span><span>Students who attend study groups 2–3× per week earn a <strong>0.31 higher GPA</strong> and report 1.4 pts lower stress.</span></div>
+      <div class="insight-row"><span class="dot" style="background:#378ADD"></span><span><strong>Humanities-only</strong> students maintain the highest avg GPA (3.48) with the fewest hours studied (11.2h/week).</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ SUBMIT ══════════════ -->
+<div id="page-submit" class="page" style="max-width:680px">
+  <div id="submit-success" class="banner success">
+    Your data has been saved — thank you! It will appear in the dashboard once reviewed.
+  </div>
+  <div id="submit-error" class="banner error">
+    Something went wrong saving your data. Please try again.
+  </div>
+
+  <div class="form-card">
+    <p class="form-title">Share your experience</p>
+    <p class="form-sub">Anonymous — no login needed. Your responses help future Foothill students plan smarter. Takes about 2 minutes.</p>
+
+    <div class="field-row">
+      <div class="field">
+        <label>Term</label>
+        <select id="f-term">
+          <option>Spring 2025</option>
+          <option>Fall 2024</option>
+          <option>Summer 2024</option>
+          <option>Spring 2024</option>
+          <option>Fall 2023</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Year in school</label>
+        <select id="f-year">
+          <option>1st year</option>
+          <option>2nd year</option>
+          <option>Transfer student</option>
+          <option>Returning student</option>
+          <option>Other</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Courses you took — select all that apply</label>
+      <div class="tag-area" id="course-tag-area">
+        <span class="tag" onclick="toggleTag(this)">CS 1A</span>
+        <span class="tag" onclick="toggleTag(this)">CS 1B</span>
+        <span class="tag" onclick="toggleTag(this)">CS 2A</span>
+        <span class="tag" onclick="toggleTag(this)">CS 2B</span>
+        <span class="tag" onclick="toggleTag(this)">Math 1A</span>
+        <span class="tag" onclick="toggleTag(this)">Math 1B</span>
+        <span class="tag" onclick="toggleTag(this)">Math 1C</span>
+        <span class="tag" onclick="toggleTag(this)">Math 1D</span>
+        <span class="tag" onclick="toggleTag(this)">Chem 1A</span>
+        <span class="tag" onclick="toggleTag(this)">Chem 1B</span>
+        <span class="tag" onclick="toggleTag(this)">Bio 10</span>
+        <span class="tag" onclick="toggleTag(this)">Phys 4A</span>
+        <span class="tag" onclick="toggleTag(this)">Phys 4B</span>
+        <span class="tag" onclick="toggleTag(this)">Engl 1A</span>
+        <span class="tag" onclick="toggleTag(this)">Engl 1B</span>
+        <span class="tag" onclick="toggleTag(this)">Hist 17A</span>
+        <span class="tag" onclick="toggleTag(this)">Hist 17B</span>
+        <span class="tag" onclick="toggleTag(this)">Psych 1</span>
+        <span class="tag" onclick="toggleTag(this)">Econ 1A</span>
+        <span class="tag" onclick="toggleTag(this)">Art 2A</span>
+        <span class="tag" onclick="toggleTag(this)">Music 1</span>
+        <span class="tag" onclick="toggleTag(this)">Other</span>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Average weekly study hours (all courses combined)</label>
+      <div class="slider-row">
+        <span class="slider-cap">0h</span>
+        <input type="range" min="0" max="40" value="12" step="1" id="f-hrs"
+          oninput="document.getElementById('hrs-out').textContent=this.value+'h'">
+        <span class="slider-cap">40h</span>
+        <span class="slider-val" id="hrs-out">12h</span>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Overall stress level this term</label>
+      <div class="slider-row">
+        <span class="slider-cap">Low 1</span>
+        <input type="range" min="1" max="10" value="5" step="1" id="f-stress"
+          oninput="document.getElementById('stress-out').textContent=this.value+'/10'">
+        <span class="slider-cap">10 High</span>
+        <span class="slider-val" id="stress-out">5/10</span>
+      </div>
+    </div>
+
+    <div class="field-row">
+      <div class="field">
+        <label>GPA this term (optional)</label>
+        <select id="f-gpa">
+          <option value="">Prefer not to say</option>
+          <option value="4.0">4.0 (A)</option>
+          <option value="3.7">3.7 (A−)</option>
+          <option value="3.3">3.3 (B+)</option>
+          <option value="3.0">3.0 (B)</option>
+          <option value="2.7">2.7 (B−)</option>
+          <option value="2.3">2.3 (C+)</option>
+          <option value="2.0">2.0 (C)</option>
+          <option value="1.7">Below 2.0</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Did you drop any courses?</label>
+        <select id="f-dropped">
+          <option value="0">No</option>
+          <option value="1">Yes — dropped 1</option>
+          <option value="2">Yes — dropped 2+</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Number of courses taken</label>
+      <select id="f-load">
+        <option value="1">1 course</option>
+        <option value="2">2 courses</option>
+        <option value="3" selected>3 courses</option>
+        <option value="4">4 courses</option>
+        <option value="5">5+ courses</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label>Major / focus area</label>
+      <select id="f-major">
+        <option value="stem">STEM (CS, Math, Science, Engineering)</option>
+        <option value="arts">Humanities (English, History, Art, Music)</option>
+        <option value="mixed">Mixed / Undecided</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label>What helped you most this term?</label>
+      <div class="tag-area" id="help-tag-area">
+        <span class="tag" onclick="toggleTag(this)">Study groups</span>
+        <span class="tag" onclick="toggleTag(this)">Office hours</span>
+        <span class="tag" onclick="toggleTag(this)">Tutoring center</span>
+        <span class="tag" onclick="toggleTag(this)">Online resources</span>
+        <span class="tag" onclick="toggleTag(this)">Good sleep schedule</span>
+        <span class="tag" onclick="toggleTag(this)">Fewer courses</span>
+        <span class="tag" onclick="toggleTag(this)">Rate My Professors</span>
+        <span class="tag" onclick="toggleTag(this)">Friends in class</span>
+        <span class="tag" onclick="toggleTag(this)">Canvas organization</span>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Advice for future students (optional)</label>
+      <textarea id="f-advice" placeholder="e.g. Don't take CS 1A and Math 1A together unless you're very comfortable with programming..."></textarea>
+    </div>
+
+    <div style="display:flex;align-items:center;gap:16px;margin-top:0.5rem;flex-wrap:wrap">
+      <button class="submit-btn" id="submit-btn" onclick="submitForm()">Submit my data</button>
+      <span class="anon-note">Anonymous · no login · your data helps the community</span>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ EXPLORER ══════════════ -->
+<div id="page-explorer" class="page">
+  <p style="font-size:14px;color:var(--text-3);margin-bottom:14px;margin-top:0.25rem">Search any Foothill course to see what students say about it.</p>
+  <input class="search-bar" type="text" placeholder="Search by course code or name — e.g. CS 1A, Calculus, English..." oninput="filterCourses(this.value)" id="course-search">
+  <div id="course-list"></div>
+</div>
+
+<!-- ══════════════ SCRIPTS ══════════════ -->
+<script>
+/* ════════════════════════════════════════════════
+   SUPABASE CONFIG
+   Replace these two values with your own from:
+   https://supabase.com/dashboard → your project → Settings → API
+   ════════════════════════════════════════════════ */
+const SUPABASE_URL = 'https://usmohqyczqcbqpnsbsiw.supabase.co/rest/v1/';
+const SUPABASE_ANON_KEY = 'usmohqyczqcbqpnsbsiw';
+
+const isConfigured = SUPABASE_URL !== 'YOUR_SUPABASE_URL';
+
+/* ── Supabase helper (no SDK needed — plain fetch) ── */
+async function dbSelect(table, params = '') {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}?${params}`, {
+    headers: {
+      'apikey': SUPABASE_ANON_KEY,
+      'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+      'Content-Type': 'application/json',
+    }
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
+async function dbInsert(table, data) {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}`, {
+    method: 'POST',
+    headers: {
+      'apikey': SUPABASE_ANON_KEY,
+      'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+      'Content-Type': 'application/json',
+      'Prefer': 'return=minimal',
+    },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return true;
+}
+
+/* ── Static fallback data (shown before Supabase is connected) ── */
+const FALLBACK = {
+  all:   { gpa: 3.21, hrs: 14.2, stress: 6.4, drop: 12, grades: [8,22,34,20,11,5], sv: [[4.8,4.2,3.9],[6.1,5.5,4.8],[7.2,6.3,5.6],[8.2,7.1,6.4]], count: 847 },
+  stem:  { gpa: 3.05, hrs: 17.1, stress: 7.6, drop: 15, grades: [6,18,29,26,14,7],  sv: [[5.3,4.8,4.1],[7.0,6.1,5.2],[8.0,7.0,6.0],[8.9,7.9,6.9]], count: 340 },
+  arts:  { gpa: 3.48, hrs: 11.2, stress: 4.9, drop: 7,  grades: [11,27,38,16,6,2],  sv: [[3.9,3.5,3.2],[5.0,4.5,4.0],[6.0,5.4,4.9],[7.0,6.2,5.5]], count: 285 },
+  mixed: { gpa: 3.18, hrs: 13.8, stress: 6.1, drop: 11, grades: [9,21,33,22,10,5],  sv: [[4.6,4.0,3.7],[5.8,5.2,4.6],[7.0,6.1,5.4],[7.9,6.9,6.1]], count: 222 },
+};
+
+let dashData = FALLBACK;
+let currentFilter = 'all';
+
+/* ── Load dashboard data from Supabase ── */
+async function loadDashboard() {
+  if (!isConfigured) {
+    document.getElementById('setup-notice').style.display = 'block';
+    renderDashboard(FALLBACK[currentFilter]);
+    document.getElementById('stat-responses').textContent = FALLBACK.all.count.toLocaleString();
+    return;
+  }
+
+  try {
+    const rows = await dbSelect('submissions', 'select=*&order=created_at.desc');
+    dashData = aggregateRows(rows);
+    document.getElementById('stat-responses').textContent = rows.length.toLocaleString();
+    renderDashboard(dashData[currentFilter]);
+  } catch (e) {
+    console.warn('Supabase load failed, using fallback:', e);
+    renderDashboard(FALLBACK[currentFilter]);
+    document.getElementById('stat-responses').textContent = FALLBACK.all.count.toLocaleString();
+  }
+}
+
+/* ── Aggregate raw rows into dashboard stats ── */
+function aggregateRows(rows) {
+  const groups = { all: rows, stem: [], arts: [], mixed: [] };
+  rows.forEach(r => {
+    if (r.major === 'stem') groups.stem.push(r);
+    else if (r.major === 'arts') groups.arts.push(r);
+    else groups.mixed.push(r);
+  });
+
+  const result = {};
+  for (const [key, arr] of Object.entries(groups)) {
+    if (!arr.length) { result[key] = FALLBACK[key]; continue; }
+    const avg = f => parseFloat((arr.reduce((s,r) => s + (parseFloat(r[f]) || 0), 0) / arr.length).toFixed(2));
+    result[key] = {
+      gpa: avg('gpa'),
+      hrs: avg('hours'),
+      stress: avg('stress'),
+      drop: Math.round(arr.filter(r => r.dropped > 0).length / arr.length * 100),
+      grades: computeGrades(arr),
+      sv: computeStressVsLoad(arr),
+      count: arr.length,
+    };
+  }
+  return result;
+}
+
+function computeGrades(arr) {
+  const buckets = [0,0,0,0,0,0];
+  arr.forEach(r => {
+    const g = parseFloat(r.gpa) || 0;
+    if (g >= 3.7) buckets[0]++;
+    else if (g >= 3.3) buckets[1]++;
+    else if (g >= 3.0) buckets[2]++;
+    else if (g >= 2.7) buckets[3]++;
+    else if (g >= 2.0) buckets[4]++;
+    else buckets[5]++;
+  });
+  return buckets.map(b => Math.round(b / arr.length * 100));
+}
+
+function computeStressVsLoad(arr) {
+  const loads = [[],[],[],[]];
+  arr.forEach(r => {
+    const idx = Math.min(parseInt(r.course_load) - 1, 3);
+    if (idx >= 0) loads[idx].push(parseFloat(r.stress) || 0);
+  });
+  const majors = ['stem','arts','mixed'];
+  return loads.map((_, li) => {
+    return majors.map(m => {
+      const sub = arr.filter(r => r.major === m && Math.min(parseInt(r.course_load)-1,3) === li);
+      if (!sub.length) return FALLBACK.all.sv[li][majors.indexOf(m)];
+      return parseFloat((sub.reduce((s,r) => s + (parseFloat(r.stress)||0), 0) / sub.length).toFixed(1));
+    });
+  });
+}
+
+/* ── Render dashboard numbers + update charts ── */
+function renderDashboard(d) {
+  document.getElementById('m-gpa').textContent = d.gpa.toFixed(2);
+  document.getElementById('m-hrs').textContent = d.hrs.toFixed(1) + 'h';
+  document.getElementById('m-stress').innerHTML = d.stress.toFixed(1) + '<span style="font-size:13px;color:var(--text-3)">/10</span>';
+  document.getElementById('m-drop').textContent = d.drop + '%';
+
+  if (gradeChart) { gradeChart.data.datasets[0].data = d.grades; gradeChart.update(); }
+  if (stressChart) {
+    stressChart.data.datasets[0].data = d.sv.map(x => x[0]);
+    stressChart.data.datasets[1].data = d.sv.map(x => x[1]);
+    stressChart.data.datasets[2].data = d.sv.map(x => x[2]);
+    stressChart.update();
+  }
+}
+
+function setFilter(k, btn) {
+  currentFilter = k;
+  document.querySelectorAll('.chip').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderDashboard((dashData[k] || FALLBACK[k]));
+}
+
+/* ── Charts ── */
+let gradeChart, stressChart;
+
+function initCharts() {
+  const d = FALLBACK.all;
+
+  gradeChart = new Chart(document.getElementById('gradeChart'), {
+    type: 'bar',
+    data: {
+      labels: ['A','B+','B','C+','C','D/F'],
+      datasets: [
+        { label: 'Selected', data: d.grades, backgroundColor: '#1a4f2e', borderRadius: 4 },
+        { label: 'Overall',  data: [9,23,34,19,10,5], backgroundColor: '#c8d8c8', borderRadius: 4 },
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { beginAtZero: true, max: 50, ticks: { callback: v => v+'%', font: { size: 10 } }, grid: { color: 'rgba(0,0,0,0.05)' } },
+        x: { ticks: { font: { size: 11 } }, grid: { display: false } }
+      }
+    }
+  });
+
+  stressChart = new Chart(document.getElementById('stressChart'), {
+    type: 'bar',
+    data: {
+      labels: ['1 course','2 courses','3 courses','4+ courses'],
+      datasets: [
+        { label: 'STEM',        data: d.sv.map(x=>x[0]), backgroundColor: '#378ADD', borderRadius: 4 },
+        { label: 'Humanities',  data: d.sv.map(x=>x[1]), backgroundColor: '#1D9E75', borderRadius: 4 },
+        { label: 'Mixed',       data: d.sv.map(x=>x[2]), backgroundColor: '#D4537E', borderRadius: 4 },
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { beginAtZero: true, max: 10, ticks: { font: { size: 10 } }, grid: { color: 'rgba(0,0,0,0.05)' } },
+        x: { ticks: { font: { size: 10 } }, grid: { display: false } }
+      }
+    }
+  });
+
+  const weekHours = [6.1,6.8,8.2,9.5,10.1,11.3,22.4,12.8,11.6,12.2,13.0,14.1,15.3,18.2,23.1,9.2];
+  new Chart(document.getElementById('hoursChart'), {
+    type: 'line',
+    data: {
+      labels: Array.from({length:16},(_,i)=>'W'+(i+1)),
+      datasets: [
+        { label: 'Hours', data: weekHours, borderColor: '#378ADD', backgroundColor: 'rgba(55,138,221,0.08)', fill: true, tension: 0.4, pointRadius: 2, borderWidth: 2 },
+        { label: 'Exam',  data: weekHours.map((v,i)=>(i===6||i===14)?v:null), borderColor: '#E24B4A', backgroundColor: 'rgba(226,75,74,0.15)', fill: true, tension: 0.4, pointRadius: 6, borderWidth: 0, pointStyle: 'triangle' },
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { beginAtZero: true, ticks: { callback: v => v+'h', font: { size: 10 } }, grid: { color: 'rgba(0,0,0,0.05)' } },
+        x: { ticks: { font: { size: 9 }, autoSkip: false, maxRotation: 0 }, grid: { display: false } }
+      }
+    }
+  });
+
+  document.getElementById('comboChart').parentElement.style.height = (7*40+80)+'px';
+  new Chart(document.getElementById('comboChart'), {
+    type: 'bar',
+    data: {
+      labels: ['CS 1A + Math 1A','Chem 1A + Bio 10','Phys 4A + CS 1A','Econ 1A + Math 1A','Hist 17A + Engl 1A','Art 2A + Music 1','Bio 10 + Psych 1'],
+      datasets: [{ label: 'Avg stress', data: [8.4,7.9,7.6,6.8,5.1,4.3,6.1], backgroundColor: ['#E24B4A','#E24B4A','#D85A30','#BA7517','#1D9E75','#1D9E75','#378ADD'], borderRadius: 4 }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { min:0, max:10, ticks: { font: { size: 10 } }, grid: { color: 'rgba(0,0,0,0.05)' } },
+        y: { ticks: { font: { size: 10 } }, grid: { display: false } }
+      }
+    }
+  });
+}
+
+/* ── Form submission ── */
+function toggleTag(el) { el.classList.toggle('sel'); }
+
+function getSelectedTags(areaId) {
+  return [...document.querySelectorAll(`#${areaId} .tag.sel`)].map(t => t.textContent);
+}
+
+async function submitForm() {
+  const btn = document.getElementById('submit-btn');
+  document.getElementById('submit-success').style.display = 'none';
+  document.getElementById('submit-error').style.display = 'none';
+
+  const courses = getSelectedTags('course-tag-area');
+  const helpers = getSelectedTags('help-tag-area');
+
+  const payload = {
+    term: document.getElementById('f-term').value,
+    year_in_school: document.getElementById('f-year').value,
+    courses: courses.join(', '),
+    hours: parseInt(document.getElementById('f-hrs').value),
+    stress: parseInt(document.getElementById('f-stress').value),
+    gpa: parseFloat(document.getElementById('f-gpa').value) || null,
+    dropped: parseInt(document.getElementById('f-dropped').value),
+    course_load: parseInt(document.getElementById('f-load').value),
+    major: document.getElementById('f-major').value,
+    helpers: helpers.join(', '),
+    advice: document.getElementById('f-advice').value.trim() || null,
+  };
+
+  if (!isConfigured) {
+    document.getElementById('submit-success').textContent = 'Demo mode: your data would be saved here once Supabase is connected!';
+    document.getElementById('submit-success').style.display = 'block';
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Saving...';
+
+  try {
+    await dbInsert('submissions', payload);
+    document.getElementById('submit-success').style.display = 'block';
+    document.getElementById('submit-success').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    btn.textContent = 'Submitted!';
+  } catch (e) {
+    console.error(e);
+    document.getElementById('submit-error').style.display = 'block';
+    btn.disabled = false;
+    btn.textContent = 'Submit my data';
+  }
+}
+
+/* ── Course Explorer ── */
+const COURSES = [
+  { code:'CS 1A',    name:'Intro to programming',       dept:'STEM',       stress:7.8, hrs:12, gpa:3.1, n:142, advice:'Start assignments early — they always take twice as long. Go to office hours weekly.' },
+  { code:'CS 1B',    name:'Intermediate programming',   dept:'STEM',       stress:8.2, hrs:14, gpa:2.9, n:98,  advice:'OOP concepts hit hard in weeks 4–6. Form a study group before midterms.' },
+  { code:'CS 2A',    name:'Data structures',            dept:'STEM',       stress:8.4, hrs:15, gpa:2.8, n:76,  advice:'Trees and graphs take real practice. Start the labs on day 1, not day before.' },
+  { code:'Math 1A',  name:'Calculus I',                 dept:'STEM',       stress:7.5, hrs:11, gpa:3.0, n:201, advice:'Do every practice problem in the book. The final is harder than the midterm.' },
+  { code:'Math 1B',  name:'Calculus II',                dept:'STEM',       stress:8.0, hrs:13, gpa:2.8, n:134, advice:'Series and sequences section is brutal. Budget extra time for that unit.' },
+  { code:'Math 1C',  name:'Multivariable calculus',     dept:'STEM',       stress:7.8, hrs:12, gpa:2.9, n:88,  advice:'Visualize everything in 3D — drawing pictures helps enormously.' },
+  { code:'Chem 1A',  name:'General chemistry I',        dept:'STEM',       stress:7.2, hrs:12, gpa:3.0, n:88,  advice:'Labs are time-consuming. Never skip pre-lab prep or you\'ll be lost.' },
+  { code:'Phys 4A',  name:'General physics I',          dept:'STEM',       stress:8.5, hrs:15, gpa:2.7, n:67,  advice:'Do not take with CS 1B simultaneously. Professor office hours are a lifesaver.' },
+  { code:'Bio 10',   name:'Intro to biology',           dept:'STEM',       stress:5.2, hrs:8,  gpa:3.5, n:143, advice:'Very interesting material. Lab reports take 2–3 hours each — plan for that.' },
+  { code:'Engl 1A',  name:'English composition',        dept:'Humanities', stress:4.1, hrs:7,  gpa:3.7, n:210, advice:'Start essays a full week early. Peer review sessions are genuinely useful.' },
+  { code:'Engl 1B',  name:'English literature',         dept:'Humanities', stress:4.3, hrs:7,  gpa:3.6, n:145, advice:'Keep up with the reading — the discussions are where you\'ll get the ideas for papers.' },
+  { code:'Hist 17A', name:'US history I',               dept:'Humanities', stress:3.8, hrs:6,  gpa:3.8, n:95,  advice:'Read the textbook closely — exams are very detail-specific.' },
+  { code:'Hist 17B', name:'US history II',              dept:'Humanities', stress:3.9, hrs:6,  gpa:3.8, n:72,  advice:'Similar to 17A. Great professor — go to lecture, not just slides.' },
+  { code:'Psych 1',  name:'Intro to psychology',        dept:'Humanities', stress:3.5, hrs:5,  gpa:3.9, n:178, advice:'Very manageable. Excellent intro course — great choice to balance a STEM-heavy term.' },
+  { code:'Econ 1A',  name:'Microeconomics',             dept:'Mixed',      stress:5.8, hrs:8,  gpa:3.4, n:112, advice:'Graphs are everything. Make sure you understand supply/demand intuitively.' },
+  { code:'Art 2A',   name:'Design fundamentals',        dept:'Humanities', stress:3.2, hrs:6,  gpa:3.9, n:55,  advice:'Time-consuming but enjoyable. Great creative outlet alongside heavier courses.' },
+  { code:'Music 1',  name:'Music fundamentals',         dept:'Humanities', stress:2.9, hrs:5,  gpa:4.0, n:44,  advice:'Very approachable. Fun way to satisfy a fine arts requirement.' },
+];
+
+function stressColor(s) { return s >= 8 ? '#e24b4a' : s >= 6.5 ? '#BA7517' : '#1D9E75'; }
+function stressTagBg(s) { return s >= 8 ? '#fff5f5' : s >= 6.5 ? '#fffbf0' : '#e8f4ed'; }
+function stressTagColor(s) { return s >= 8 ? '#a32d2d' : s >= 6.5 ? '#854f0b' : '#1a4f2e'; }
+function deptClass(d) { return d === 'STEM' ? 'badge-stem' : d === 'Humanities' ? 'badge-humanities' : 'badge-mixed'; }
+
+function renderCourses(list) {
+  const el = document.getElementById('course-list');
+  if (!list.length) {
+    el.innerHTML = '<p style="font-size:13px;color:var(--text-3);padding:2rem 0">No courses found — try a different search term.</p>';
+    return;
+  }
+  el.innerHTML = list.map(c => `
+    <div class="course-card">
+      <div style="min-width:68px;text-align:center;flex-shrink:0">
+        <div class="course-code">${c.code}</div>
+        <span class="course-dept-badge ${deptClass(c.dept)}">${c.dept}</span>
+      </div>
+      <div class="course-divider"></div>
+      <div class="course-detail">
+        <p class="course-name">${c.name}</p>
+        <div class="course-stats">
+          <div>
+            <div class="course-stat-lbl">Stress</div>
+            <div class="course-stat-val" style="color:${stressColor(c.stress)}">${c.stress}/10</div>
+          </div>
+          <div>
+            <div class="course-stat-lbl">Hrs/week</div>
+            <div class="course-stat-val">${c.hrs}h</div>
+          </div>
+          <div>
+            <div class="course-stat-lbl">Avg GPA</div>
+            <div class="course-stat-val">${c.gpa}</div>
+          </div>
+          <div>
+            <div class="course-stat-lbl">Responses</div>
+            <div class="course-stat-val">${c.n}</div>
+          </div>
+        </div>
+        <div class="course-tip">${c.advice}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function filterCourses(q) {
+  const t = q.trim().toLowerCase();
+  renderCourses(t ? COURSES.filter(c => c.code.toLowerCase().includes(t) || c.name.toLowerCase().includes(t)) : COURSES);
+}
+
+/* ── Page nav ── */
+function showPage(id, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-link').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  btn.classList.add('active');
+}
+
+/* ── Init ── */
+initCharts();
+loadDashboard();
+renderCourses(COURSES);
+</script>
+</body>
+</html>
