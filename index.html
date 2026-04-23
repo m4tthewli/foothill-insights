@@ -586,17 +586,7 @@
     <div class="field-row">
       <div class="field">
         <label>GPA this term (optional)</label>
-        <select id="f-gpa">
-          <option value="">Prefer not to say</option>
-          <option value="4.0">4.0 (A)</option>
-          <option value="3.7">3.7 (A−)</option>
-          <option value="3.3">3.3 (B+)</option>
-          <option value="3.0">3.0 (B)</option>
-          <option value="2.7">2.7 (B−)</option>
-          <option value="2.3">2.3 (C+)</option>
-          <option value="2.0">2.0 (C)</option>
-          <option value="1.7">Below 2.0</option>
-        </select>
+        <input type="number" id="f-gpa" min="0" max="4.0" step="0.01" placeholder="e.g. 3.45 (or leave blank)">
       </div>
       <div class="field">
         <label>Did you drop any courses?</label>
