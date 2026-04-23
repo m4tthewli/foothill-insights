@@ -166,8 +166,9 @@
   </a>
   <div class="nav-links">
     <button class="nav-link active" onclick="showPage('dashboard',this)">Dashboard</button>
-    <button class="nav-link" onclick="showPage('submit',this)">Share your data</button>
+    <button class="nav-link" onclick="showPage('submit',this)">Share your experience</button>
     <button class="nav-link" onclick="showPage('explorer',this)">Course explorer</button>
+    <button class="nav-link" onclick="showPage('rate',this)">Rate a class</button>
   </div>
 </nav>
 
@@ -374,6 +375,80 @@
   <div id="course-list"></div>
 </div>
 
+<!-- RATE A CLASS -->
+<div id="page-rate" class="page" style="max-width:680px">
+  <div id="rate-success" class="banner success">Your rating has been saved — thank you!</div>
+  <div id="rate-error" class="banner error">Something went wrong. Please try again.</div>
+
+  <div class="form-card">
+    <p class="form-title">Rate a class</p>
+    <p class="form-sub">Help future students know what to expect. You can submit multiple ratings — one per course.</p>
+
+    <div class="field-row">
+      <div class="field">
+        <label>Course</label>
+        <input type="text" id="r-course" placeholder="e.g. CS 1A, Math 1B...">
+      </div>
+      <div class="field">
+        <label>Professor (optional)</label>
+        <input type="text" id="r-prof" placeholder="e.g. Prof. Smith">
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Term</label>
+      <select id="r-term"><option>Spring 2026</option></select>
+    </div>
+
+    <div class="field">
+      <label>Overall rating</label>
+      <div style="display:flex;gap:8px;align-items:center;margin-top:4px;" id="star-row">
+        <span data-val="1" onclick="setStars(1)" style="font-size:36px;cursor:pointer;color:#ccc;line-height:1;transition:color 0.1s;">★</span>
+        <span data-val="2" onclick="setStars(2)" style="font-size:36px;cursor:pointer;color:#ccc;line-height:1;transition:color 0.1s;">★</span>
+        <span data-val="3" onclick="setStars(3)" style="font-size:36px;cursor:pointer;color:#ccc;line-height:1;transition:color 0.1s;">★</span>
+        <span data-val="4" onclick="setStars(4)" style="font-size:36px;cursor:pointer;color:#ccc;line-height:1;transition:color 0.1s;">★</span>
+        <span data-val="5" onclick="setStars(5)" style="font-size:36px;cursor:pointer;color:#ccc;line-height:1;transition:color 0.1s;">★</span>
+        <span id="star-label" style="font-size:13px;color:var(--text-3);margin-left:8px;"></span>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Difficulty</label>
+      <div class="slider-row">
+        <span class="slider-cap">Easy</span>
+        <input type="range" min="1" max="5" value="3" step="1" id="r-difficulty"
+          oninput="document.getElementById('diff-out').textContent=diffLabel(this.value)">
+        <span class="slider-cap">Hard</span>
+        <span class="slider-val" id="diff-out">Moderate</span>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Would you recommend this course?</label>
+      <div style="display:flex;gap:10px;margin-top:6px;">
+        <button type="button" class="rec-btn" id="rec-yes" onclick="setRec('yes')"
+          style="flex:1;padding:10px;border-radius:var(--radius-sm);border:1px solid var(--border-strong);background:var(--bg);color:var(--text-2);cursor:pointer;font-family:var(--font);font-size:13px;transition:all 0.15s;">
+          Yes, recommend it
+        </button>
+        <button type="button" class="rec-btn" id="rec-no" onclick="setRec('no')"
+          style="flex:1;padding:10px;border-radius:var(--radius-sm);border:1px solid var(--border-strong);background:var(--bg);color:var(--text-2);cursor:pointer;font-family:var(--font);font-size:13px;transition:all 0.15s;">
+          Would not recommend
+        </button>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Tips or comments (optional)</label>
+      <textarea id="r-comment" placeholder="What should students know before taking this class?"></textarea>
+    </div>
+
+    <div style="display:flex;align-items:center;gap:16px;margin-top:0.5rem;flex-wrap:wrap">
+      <button class="submit-btn" id="rate-btn" onclick="submitRating()">Submit rating</button>
+      <span class="anon-note">Anonymous · no login required</span>
+    </div>
+  </div>
+</div>
+
 <script>
 const SUPABASE_URL = 'https://usmohqyczqcbqpnsbsiw.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVzbW9ocXljenFjYnFwbnNic2l3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5MTM1NzMsImV4cCI6MjA5MjQ4OTU3M30.R2a7k2oh51cvFt6xvqzI5AFiU6aOPUksIYwKHUNPz5g';
@@ -518,6 +593,35 @@ function addCourse() {
 function toggleTag(el) { el.classList.toggle('sel'); }
 function getSelectedTags(id) { return [...document.getElementById(id).querySelectorAll('.tag')].map(t => t.firstChild.textContent.trim()); }
 
+function addRatingRow() {
+  const list = document.getElementById('ratings-list');
+  const row = document.createElement('div');
+  row.style.cssText = 'display:grid;grid-template-columns:1fr 1fr auto auto;gap:8px;align-items:center;background:var(--bg);border:1px solid var(--border-strong);border-radius:var(--radius-sm);padding:10px 12px;';
+  row.innerHTML = `
+    <input type="text" placeholder="Course (e.g. CS 1A)" style="font-size:13px;padding:7px 10px;border-radius:var(--radius-sm);border:1px solid var(--border-strong);background:var(--surface);color:var(--text);font-family:var(--font);outline:none;" class="rating-course">
+    <input type="text" placeholder="Professor (optional)" style="font-size:13px;padding:7px 10px;border-radius:var(--radius-sm);border:1px solid var(--border-strong);background:var(--surface);color:var(--text);font-family:var(--font);outline:none;" class="rating-prof">
+    <div style="display:flex;gap:4px;align-items:center;" class="star-group">
+      ${[1,2,3,4,5].map(n=>`<span data-val="${n}" onclick="setStars(this,${n})" style="font-size:22px;cursor:pointer;color:#ccc;line-height:1;">★</span>`).join('')}
+    </div>
+    <button type="button" onclick="this.closest('div[style]').remove()" style="background:none;border:none;font-size:18px;cursor:pointer;color:var(--text-3);padding:0 4px;line-height:1;">×</button>
+  `;
+  list.appendChild(row);
+}
+
+function setStars(el, val) {
+  const stars = el.closest('.star-group').querySelectorAll('span');
+  stars.forEach((s,i) => { s.style.color = i < val ? '#f4a636' : '#ccc'; s.dataset.selected = i < val ? '1' : '0'; });
+  el.closest('.star-group').dataset.rating = val;
+}
+
+function getRatings() {
+  return [...document.querySelectorAll('#ratings-list > div')].map(row => ({
+    course: row.querySelector('.rating-course').value.trim(),
+    professor: row.querySelector('.rating-prof').value.trim() || null,
+    rating: parseInt(row.querySelector('.star-group').dataset.rating || '0'),
+  })).filter(r => r.course);
+}
+
 async function submitForm() {
   const btn = document.getElementById('submit-btn');
   document.getElementById('submit-success').style.display='none';
@@ -602,6 +706,79 @@ function showPage(id,btn) {
   document.querySelectorAll('.nav-link').forEach(b=>b.classList.remove('active'));
   document.getElementById('page-'+id).classList.add('active');
   btn.classList.add('active');
+}
+
+let currentRating = 0;
+let currentRec = null;
+
+const starLabels = ['','Poor','Fair','Good','Great','Excellent'];
+
+function setStars(val) {
+  currentRating = val;
+  document.querySelectorAll('#star-row span[data-val]').forEach(s => {
+    s.style.color = parseInt(s.dataset.val) <= val ? '#f4a636' : '#ccc';
+  });
+  document.getElementById('star-label').textContent = starLabels[val];
+}
+
+function diffLabel(v) {
+  return ['','Very easy','Easy','Moderate','Hard','Very hard'][v];
+}
+
+function setRec(val) {
+  currentRec = val;
+  document.getElementById('rec-yes').style.background = val==='yes' ? 'var(--green)' : 'var(--bg)';
+  document.getElementById('rec-yes').style.color = val==='yes' ? '#fff' : 'var(--text-2)';
+  document.getElementById('rec-yes').style.borderColor = val==='yes' ? 'var(--green)' : 'var(--border-strong)';
+  document.getElementById('rec-no').style.background = val==='no' ? '#8b1a1a' : 'var(--bg)';
+  document.getElementById('rec-no').style.color = val==='no' ? '#fff' : 'var(--text-2)';
+  document.getElementById('rec-no').style.borderColor = val==='no' ? '#8b1a1a' : 'var(--border-strong)';
+}
+
+async function submitRating() {
+  const btn = document.getElementById('rate-btn');
+  document.getElementById('rate-success').style.display = 'none';
+  document.getElementById('rate-error').style.display = 'none';
+
+  const course = document.getElementById('r-course').value.trim();
+  if (!course) { alert('Please enter a course name.'); return; }
+  if (!currentRating) { alert('Please select a star rating.'); return; }
+
+  const payload = {
+    course,
+    professor: document.getElementById('r-prof').value.trim() || null,
+    term: document.getElementById('r-term').value,
+    rating: currentRating,
+    difficulty: parseInt(document.getElementById('r-difficulty').value),
+    recommend: currentRec,
+    comment: document.getElementById('r-comment').value.trim() || null,
+  };
+
+  btn.disabled = true; btn.textContent = 'Saving...';
+
+  try {
+    await dbInsert('course_ratings', payload);
+    document.getElementById('rate-success').style.display = 'block';
+    document.getElementById('rate-success').scrollIntoView({behavior:'smooth',block:'nearest'});
+    btn.textContent = 'Submitted!';
+    // reset
+    setTimeout(() => {
+      document.getElementById('r-course').value = '';
+      document.getElementById('r-prof').value = '';
+      document.getElementById('r-comment').value = '';
+      currentRating = 0; currentRec = null;
+      document.querySelectorAll('#star-row span[data-val]').forEach(s=>s.style.color='#ccc');
+      document.getElementById('star-label').textContent = '';
+      document.getElementById('r-difficulty').value = 3;
+      document.getElementById('diff-out').textContent = 'Moderate';
+      setRec(null);
+      btn.disabled = false; btn.textContent = 'Submit rating';
+    }, 2000);
+  } catch(e) {
+    console.error(e);
+    document.getElementById('rate-error').style.display = 'block';
+    btn.disabled = false; btn.textContent = 'Submit rating';
+  }
 }
 
 initCharts();
