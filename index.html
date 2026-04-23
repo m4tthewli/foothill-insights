@@ -167,7 +167,7 @@
   <div class="nav-links">
     <button class="nav-link active" onclick="showPage('dashboard',this)">Dashboard</button>
     <button class="nav-link" onclick="showPage('submit',this)">Share your experience</button>
-    <button class="nav-link" onclick="showPage('explorer',this)">Course explorer</button>
+    <button class="nav-link" onclick="showPage('explorer',this)">Course feedback</button>
     <button class="nav-link" onclick="showPage('rate',this)">Rate a class</button>
   </div>
 </nav>
@@ -370,7 +370,7 @@
 
 <!-- EXPLORER -->
 <div id="page-explorer" class="page">
-  <p style="font-size:14px;color:var(--text-3);margin-bottom:14px;margin-top:0.25rem">Search any Foothill course to see what students say about it.</p>
+  <p style="font-size:14px;color:var(--text-3);margin-bottom:14px;margin-top:0.25rem">Real ratings and feedback from Foothill students. Search by course name or professor.</p>
   <input class="search-bar" type="text" placeholder="Search by course code or name — e.g. CS 1A, Calculus, English..." oninput="filterCourses(this.value)">
   <div id="course-list"></div>
 </div>
@@ -783,7 +783,7 @@ async function submitRating() {
 
 initCharts();
 loadDashboard();
-renderCourses(COURSES);
+loadCourseRatings();
 </script>
 </body>
 </html>
