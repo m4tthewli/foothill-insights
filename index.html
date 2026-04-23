@@ -495,18 +495,35 @@
 
   <div id="planner-msg" class="banner" style="margin-bottom:1rem;"></div>
 
-  <!-- Requirements panel (shown when major+UC selected) -->
+  <!-- Guidance panel (shown when major+UC selected) -->
   <div id="requirements-panel" style="display:none;background:var(--green-pale);border:1px solid rgba(139,26,26,0.15);border-radius:var(--radius);padding:1rem 1.25rem;margin-bottom:1.25rem;">
     <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;flex-wrap:wrap;">
-      <div>
-        <p style="font-size:13px;font-weight:500;color:var(--green);margin-bottom:4px;" id="req-title">Requirements</p>
+      <div style="flex:1;">
+        <p style="font-size:13px;font-weight:500;color:var(--green);margin-bottom:4px;" id="req-title">Transfer guidance</p>
         <p style="font-size:12px;color:var(--green);opacity:0.8;line-height:1.6;" id="req-body"></p>
+        <p style="font-size:12px;color:var(--green);opacity:0.7;margin-top:6px;line-height:1.5;">Suggested courses to include somewhere in your plan:</p>
+        <div id="req-courses" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;"></div>
+        <p style="font-size:11px;color:var(--green);opacity:0.6;margin-top:8px;">These are suggestions only — add them to any quarter you like by clicking the + button, or build your plan freely below.</p>
       </div>
       <a id="assist-link" href="https://assist.org" target="_blank" style="display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:500;color:var(--green);text-decoration:none;border:1px solid rgba(139,26,26,0.25);padding:6px 12px;border-radius:var(--radius-sm);white-space:nowrap;flex-shrink:0;">
         View on ASSIST.org ↗
       </a>
     </div>
-    <div id="req-courses" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;"></div>
+  </div>
+
+  <!-- Cal-GETC Section -->
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:1.25rem;">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;cursor:pointer;gap:8px;" onclick="toggleCalGETC()">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span style="font-size:13px;font-weight:500;color:var(--text);">Cal-GETC requirements</span>
+        <span style="font-size:11px;background:var(--green-pale);color:var(--green);border:1px solid rgba(139,26,26,0.15);border-radius:999px;padding:2px 8px;">Required for UC/CSU transfer · min 45 units</span>
+      </div>
+      <span id="calgetc-arrow" style="font-size:13px;color:var(--text-3);transition:transform 0.2s;">▼</span>
+    </div>
+    <div id="calgetc-body" style="display:none;border-top:1px solid var(--border);padding:14px 16px;">
+      <p style="font-size:12px;color:var(--text-3);margin-bottom:14px;line-height:1.6;">Cal-GETC is the required GE pattern for transfer students starting Fall 2025. Complete all 6 areas with a C or better. Click any course to add it to your course bank. <a href="https://catalog.foothill.edu/degree-certificate-requirements/cal-getc/" target="_blank" style="color:var(--green);">View full list on Foothill Catalog ↗</a></p>
+      <div style="display:flex;flex-direction:column;gap:12px;" id="calgetc-areas"></div>
+    </div>
   </div>
 
   <!-- Grid + bank -->
@@ -521,9 +538,9 @@
         <button onclick="addToBank()" style="background:var(--green);color:#fff;border:none;padding:6px 10px;border-radius:var(--radius-sm);font-size:12px;font-family:var(--font);cursor:pointer;">+</button>
       </div>
       <div id="course-bank" style="display:flex;flex-direction:column;gap:6px;min-height:60px;background:var(--bg);border:1px dashed var(--border-strong);border-radius:var(--radius-sm);padding:8px;" ondragover="event.preventDefault()" ondrop="dropToBank(event)"></div>
-      <p style="font-size:11px;color:var(--text-3);margin-top:6px;">Drag courses between quarters and the bank.</p>
+      <p style="font-size:11px;color:var(--text-3);margin-top:6px;">Type any course and click + to add it. Drag courses between quarters and the bank.</p>
       <p style="font-size:11px;color:var(--text-3);margin-top:4px;">
-        <span style="display:inline-block;width:8px;height:8px;background:#f4a636;border-radius:2px;margin-right:3px;"></span>Required for transfer
+        <span style="display:inline-block;width:8px;height:8px;background:#f4a636;border-radius:2px;margin-right:3px;"></span>Suggested for transfer
       </p>
     </div>
   </div>
@@ -1056,13 +1073,21 @@ function showRequirements(major, uc) {
   const panel = document.getElementById('requirements-panel');
   panel.style.display = 'block';
   document.getElementById('req-title').textContent =
-    `${MAJOR_LABELS[major]} → ${ucInfo.name} · Transfer requirements`;
+    `${MAJOR_LABELS[major]} → ${ucInfo.name} · Transfer guidance`;
   document.getElementById('req-body').textContent = ucInfo.tag || ucInfo.tab || '';
   document.getElementById('assist-link').href =
     `${ASSIST_BASE}${ucInfo.id}&reportType=Major&department=all`;
   document.getElementById('req-courses').innerHTML = req.map(c =>
-    `<span style="background:#fff3cd;color:#7a4f00;border:1px solid #f4a636;border-radius:999px;padding:3px 10px;font-size:11px;font-family:var(--mono);">${c}</span>`
+    `<span onclick="addCourseToBank('${c}')" title="Click to add to your plan"
+      style="background:#fff3cd;color:#7a4f00;border:1px solid #f4a636;border-radius:999px;padding:3px 10px;font-size:11px;font-family:var(--mono);cursor:pointer;display:inline-flex;align-items:center;gap:5px;">
+      <span style="font-size:13px;line-height:1;">+</span>${c}
+    </span>`
   ).join('');
+}
+
+function addCourseToBank(course) {
+  bankData.push(course);
+  renderBank();
 }
 
 function loadMajorPlan(major) {
@@ -1099,8 +1124,8 @@ function courseChip(course, ti, ci, isRequired) {
   return `<div draggable="true"
     ondragstart="dragStart(event,'quarter',${ti},${ci})"
     ondragend="dragEnd()"
-    style="background:${bg};color:${color};border:${border};border-radius:6px;padding:5px 10px;font-size:12px;font-family:var(--mono);cursor:grab;display:flex;justify-content:space-between;align-items:center;gap:6px;">
-    <span>${course}</span>
+    style="background:${bg};color:${color};border:${border};border-radius:6px;padding:5px 10px;font-size:12px;font-family:var(--mono);cursor:grab;display:flex;justify-content:space-between;align-items:center;gap:6px;" title="${isRequired ? 'Suggested for transfer' : ''}">
+    <span>${isRequired ? '★ ' : ''}${course}</span>
     <span onclick="removeFromQuarter(${ti},${ci})" style="cursor:pointer;opacity:0.5;font-size:14px;line-height:1;">×</span>
   </div>`;
 }
@@ -1216,6 +1241,92 @@ function showPlannerMsg(text, success) {
   msg.className = 'banner ' + (success ? 'success' : 'error');
   msg.style.display = 'block';
   setTimeout(() => { msg.style.display = 'none'; }, 4000);
+}
+
+
+// ── CAL-GETC DATA (Foothill College 2025-2026) ──────────────
+const CALGETC = [
+  {
+    area: 'Area 1: English Communication',
+    note: 'Complete one from each: 1A (Composition), 1B (Critical Thinking), 1C (Oral Communication)',
+    sub: [
+      { label: '1A – English Composition', courses: ['ENGL C1000','ENGL C1000H','ESLL 26'] },
+      { label: '1B – Critical Thinking', courses: ['ENGL C1001','ENGL C1001H','ENGL 1B','ENGL 1BH','PHIL 1'] },
+      { label: '1C – Oral Communication', courses: ['COMM C1000','COMM C1000H','COMM 3'] },
+    ]
+  },
+  {
+    area: 'Area 2: Mathematical Concepts & Quantitative Reasoning',
+    note: 'Complete one course',
+    sub: [
+      { label: 'Math / Stats', courses: ['MATH 1A','MATH 1B','MATH 1C','MATH 1D','MATH 2A','MATH 2B','MATH 12','MATH 17','MATH 22','MATH 40A','MATH 47','MATH 48C','PSYC 7','SOC 7','STAT C1000','C S 18'] },
+    ]
+  },
+  {
+    area: 'Area 3: Arts and Humanities',
+    note: 'Complete one from 3A (Arts) and one from 3B (Humanities)',
+    sub: [
+      { label: '3A – Arts', courses: ['ART 1','ART 2A','ART 2B','ART 2C','ART 2D','ART 2E','ART 2F','ART 2G','ART 2J','ART 3','DANC 10','MUS 1','MUS 2A','MUS 2B','MUS 3A','MUS 10','PHIL 11','PHOT 5'] },
+      { label: '3B – Humanities', courses: ['ENGL 5','ENGL 6','ENGL 10','ENGL 22','HIST 1','HIST 4A','HIST 4B','HIST 7','HUMN 1','HUMN 4','HUMN 7','PHIL 1','PHIL 2','PHIL 3','PHIL 7'] },
+    ]
+  },
+  {
+    area: 'Area 4: Social and Behavioral Sciences',
+    note: 'Complete two courses from at least two different disciplines',
+    sub: [
+      { label: 'Social Sciences', courses: ['ANTH 2A','ANTH 2B','ANTH 3','ECON 1A','ECON 1B','GEOG 2','HIST 17A','HIST 17B','HIST 17C','POLI 1','PSYC 1','PSYC 2','PSYC 4','SOC 1','SOC 2','SOC 10'] },
+    ]
+  },
+  {
+    area: 'Area 5: Physical and Biological Sciences',
+    note: 'Complete one from 5A (Physical) and one from 5B (Biological); at least one must include a lab',
+    sub: [
+      { label: '5A – Physical Sciences', courses: ['ASTR 10','ASTR 10L','CHEM 1A','CHEM 1B','CHEM 12A','CHEM 12B','CHEM 25','PHYS 4A','PHYS 4B','PHYS 4C','PHYS 5A','PHYS 5B','GEOG 10','GEOL 10'] },
+      { label: '5B – Biological Sciences', courses: ['BIO 1A','BIO 1B','BIO 9','BIO 10','BIO 14','BIO 15','BIO 40A','BIO 40B','PSYC 3'] },
+    ]
+  },
+  {
+    area: 'Area 6: Ethnic Studies',
+    note: 'Complete one course',
+    sub: [
+      { label: 'Ethnic Studies', courses: ['AFAM 1','ANTH 4','CHST 1','ETHN 1','ETHN 2','HIST 6','HIST 8','HIST 14','LTNS 1','SOCI 12'] },
+    ]
+  },
+];
+
+let calgetcOpen = false;
+
+function toggleCalGETC() {
+  calgetcOpen = !calgetcOpen;
+  document.getElementById('calgetc-body').style.display = calgetcOpen ? 'block' : 'none';
+  document.getElementById('calgetc-arrow').style.transform = calgetcOpen ? 'rotate(180deg)' : '';
+  if (calgetcOpen && !document.getElementById('calgetc-areas').children.length) {
+    renderCalGETC();
+  }
+}
+
+function renderCalGETC() {
+  const el = document.getElementById('calgetc-areas');
+  el.innerHTML = CALGETC.map(area => `
+    <div>
+      <p style="font-size:12px;font-weight:500;color:var(--text);margin-bottom:2px;">${area.area}</p>
+      <p style="font-size:11px;color:var(--text-3);margin-bottom:8px;">${area.note}</p>
+      ${area.sub.map(s => `
+        <div style="margin-bottom:8px;">
+          <p style="font-size:11px;color:var(--text-2);font-weight:500;margin-bottom:5px;">${s.label}</p>
+          <div style="display:flex;flex-wrap:wrap;gap:5px;">
+            ${s.courses.map(c => `
+              <span onclick="addCourseToBank('${c}')" title="Click to add to course bank"
+                style="background:var(--bg);color:var(--text-2);border:1px solid var(--border-strong);border-radius:999px;padding:3px 9px;font-size:11px;font-family:var(--mono);cursor:pointer;display:inline-flex;align-items:center;gap:4px;transition:all 0.1s;">
+                <span style="font-size:12px;opacity:0.6;">+</span>${c}
+              </span>
+            `).join('')}
+          </div>
+        </div>
+      `).join('')}
+      <hr style="border:none;border-top:1px solid var(--border);margin-top:4px;">
+    </div>
+  `).join('');
 }
 
 initCharts();
