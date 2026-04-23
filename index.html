@@ -9,10 +9,10 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <style>
   :root {
-    --red: #8b1a1a;
-    --red-light: #b22222;
-    --red-pale: #faeaea;
-    --red-mid: #e07070;
+    --green: #8b1a1a;
+    --green-light: #b22222;
+    --green-pale: #faeaea;
+    --green-mid: #e07070;
     --accent: #f4a636;
     --red: #e24b4a;
     --blue: #378ADD;
@@ -165,13 +165,14 @@
   </a>
   <div class="nav-links">
     <button class="nav-link active" onclick="showPage('dashboard',this)">Dashboard</button>
+    <button class="nav-link" onclick="showPage('explorer',this)">Course feedback</button>
     <button class="nav-link" onclick="showPage('submit',this)">Share your experience</button>
     <button class="nav-link" onclick="showPage('rate',this)">Rate a class</button>
-    <button class="nav-link" onclick="showPage('explorer',this)">Course feedback</button>
+    <button class="nav-link" onclick="showPage('planner',this)">Course planner</button>
   </div>
 </nav>
 
-<div class="hero">
+<div class="hero" id="site-hero">
   <div class="hero-inner">
     <div class="hero-eyebrow">Foothill College · Los Altos Hills, CA</div>
     <h1>Course insights from<br>your fellow students</h1>
@@ -444,6 +445,86 @@
     <div style="display:flex;align-items:center;gap:16px;margin-top:0.5rem;flex-wrap:wrap">
       <button class="submit-btn" id="rate-btn" onclick="submitRating()">Submit rating</button>
       <span class="anon-note">Anonymous · no login required</span>
+    </div>
+  </div>
+</div>
+
+
+<!-- COURSE PLANNER -->
+<div id="page-planner" class="page">
+
+  <!-- Controls -->
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem;margin-bottom:1.25rem;">
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr auto auto;gap:10px;align-items:end;flex-wrap:wrap;">
+      <div>
+        <p style="font-size:11px;font-weight:500;color:var(--text-2);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:5px;">Major</p>
+        <select id="planner-major" onchange="onPlannerChange()" style="width:100%;font-size:13px;padding:8px 10px;border-radius:var(--radius-sm);border:1px solid var(--border-strong);background:var(--bg);color:var(--text);font-family:var(--font);outline:none;">
+          <option value="">— Select major —</option>
+          <option value="cs">Computer Science</option>
+          <option value="math">Mathematics</option>
+          <option value="bio">Biology / Pre-Med</option>
+          <option value="business">Business / Economics</option>
+          <option value="psychology">Psychology</option>
+          <option value="english">English / Humanities</option>
+          <option value="custom">Custom (start blank)</option>
+        </select>
+      </div>
+      <div>
+        <p style="font-size:11px;font-weight:500;color:var(--text-2);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:5px;">Target UC</p>
+        <select id="planner-uc" onchange="onPlannerChange()" style="width:100%;font-size:13px;padding:8px 10px;border-radius:var(--radius-sm);border:1px solid var(--border-strong);background:var(--bg);color:var(--text);font-family:var(--font);outline:none;">
+          <option value="">— Select UC —</option>
+          <option value="ucb">UC Berkeley</option>
+          <option value="ucla">UCLA</option>
+          <option value="ucsd">UC San Diego</option>
+          <option value="ucsb">UC Santa Barbara</option>
+          <option value="uci">UC Irvine</option>
+          <option value="ucd">UC Davis</option>
+          <option value="ucsc">UC Santa Cruz</option>
+          <option value="ucr">UC Riverside</option>
+          <option value="ucm">UC Merced</option>
+        </select>
+      </div>
+      <div>
+        <p style="font-size:11px;font-weight:500;color:var(--text-2);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:5px;">Your name / ID</p>
+        <input type="text" id="planner-name" placeholder="e.g. jsmith (to save)" style="width:100%;font-size:13px;padding:8px 10px;border-radius:var(--radius-sm);border:1px solid var(--border-strong);background:var(--bg);color:var(--text);font-family:var(--font);outline:none;">
+      </div>
+      <button onclick="savePlan()" style="background:var(--green);color:#fff;border:none;padding:9px 18px;border-radius:var(--radius-sm);font-size:13px;font-family:var(--font);cursor:pointer;white-space:nowrap;">Save plan</button>
+      <button onclick="loadPlan()" style="background:var(--bg);color:var(--text-2);border:1px solid var(--border-strong);padding:9px 18px;border-radius:var(--radius-sm);font-size:13px;font-family:var(--font);cursor:pointer;white-space:nowrap;">Load saved</button>
+    </div>
+  </div>
+
+  <div id="planner-msg" class="banner" style="margin-bottom:1rem;"></div>
+
+  <!-- Requirements panel (shown when major+UC selected) -->
+  <div id="requirements-panel" style="display:none;background:var(--green-pale);border:1px solid rgba(139,26,26,0.15);border-radius:var(--radius);padding:1rem 1.25rem;margin-bottom:1.25rem;">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;flex-wrap:wrap;">
+      <div>
+        <p style="font-size:13px;font-weight:500;color:var(--green);margin-bottom:4px;" id="req-title">Requirements</p>
+        <p style="font-size:12px;color:var(--green);opacity:0.8;line-height:1.6;" id="req-body"></p>
+      </div>
+      <a id="assist-link" href="https://assist.org" target="_blank" style="display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:500;color:var(--green);text-decoration:none;border:1px solid rgba(139,26,26,0.25);padding:6px 12px;border-radius:var(--radius-sm);white-space:nowrap;flex-shrink:0;">
+        View on ASSIST.org ↗
+      </a>
+    </div>
+    <div id="req-courses" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;"></div>
+  </div>
+
+  <!-- Grid + bank -->
+  <div style="display:grid;grid-template-columns:1fr 220px;gap:16px;align-items:start;">
+    <div>
+      <div id="planner-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;"></div>
+    </div>
+    <div>
+      <p style="font-size:11px;font-weight:500;color:var(--text-3);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:8px;font-family:var(--mono);">Course bank</p>
+      <div style="display:flex;gap:6px;margin-bottom:8px;">
+        <input type="text" id="bank-input" placeholder="Add course..." style="flex:1;font-size:12px;padding:6px 8px;border-radius:var(--radius-sm);border:1px solid var(--border-strong);background:var(--bg);color:var(--text);font-family:var(--font);outline:none;" onkeydown="if(event.key==='Enter')addToBank()">
+        <button onclick="addToBank()" style="background:var(--green);color:#fff;border:none;padding:6px 10px;border-radius:var(--radius-sm);font-size:12px;font-family:var(--font);cursor:pointer;">+</button>
+      </div>
+      <div id="course-bank" style="display:flex;flex-direction:column;gap:6px;min-height:60px;background:var(--bg);border:1px dashed var(--border-strong);border-radius:var(--radius-sm);padding:8px;" ondragover="event.preventDefault()" ondrop="dropToBank(event)"></div>
+      <p style="font-size:11px;color:var(--text-3);margin-top:6px;">Drag courses between quarters and the bank.</p>
+      <p style="font-size:11px;color:var(--text-3);margin-top:4px;">
+        <span style="display:inline-block;width:8px;height:8px;background:#f4a636;border-radius:2px;margin-right:3px;"></span>Required for transfer
+      </p>
     </div>
   </div>
 </div>
@@ -779,12 +860,20 @@ function filterCourses(q) {
   renderCourses(filtered);
 }
 
+let plannerInitialized = false;
 function showPage(id,btn) {
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-link').forEach(b=>b.classList.remove('active'));
   document.getElementById('page-'+id).classList.add('active');
   btn.classList.add('active');
+  const hero = document.getElementById('site-hero');
+  if (hero) hero.style.display = (id === 'dashboard' || id === 'explorer') ? 'block' : 'none';
   if (id === 'explorer') loadCourseRatings();
+  if (id === 'planner' && !plannerInitialized) {
+    plannerInitialized = true;
+    renderPlanner();
+    renderBank();
+  }
 }
 
 let currentRating = 0;
@@ -858,6 +947,275 @@ async function submitRating() {
     document.getElementById('rate-error').style.display = 'block';
     btn.disabled = false; btn.textContent = 'Submit rating';
   }
+}
+
+
+// ── COURSE PLANNER ──────────────────────────────────────────
+
+const TERMS = [
+  'Year 1 · Fall','Year 1 · Winter','Year 1 · Spring',
+  'Year 2 · Fall','Year 2 · Winter','Year 2 · Spring',
+];
+
+// Required courses per major (Foothill course codes based on ASSIST articulation)
+// These map to actual UC Transfer Pathway requirements
+const REQUIRED_COURSES = {
+  cs:         ['CS 1A','CS 1B','CS 2A','CS 2B','Math 1A','Math 1B','Math 1C','Math 1D','Phys 4A','Phys 4B'],
+  math:       ['Math 1A','Math 1B','Math 1C','Math 1D','Math 22','Phys 4A','Phys 4B','CS 1A'],
+  bio:        ['Bio 1A','Bio 1B','Chem 1A','Chem 1B','Chem 12A','Math 1A','Math 1B','Phys 4A'],
+  business:   ['Math 1A','Econ 1A','Econ 1B','Engl 1A','Actg 1A','Actg 1B','Bus 53'],
+  psychology: ['Psych 1','Psych 2','Bio 10','Math 10','Engl 1A','Engl 1B'],
+  english:    ['Engl 1A','Engl 1B','Engl 5','Hist 17A','Hist 17B'],
+  custom:     [],
+};
+
+// Suggested 2-year plan per major (6 quarters)
+const MAJOR_PLANS = {
+  cs: [
+    ['CS 1A','Math 1A','Engl 1A'],
+    ['CS 1B','Math 1B','Engl 1B'],
+    ['CS 2A','Math 1C','Phys 4A'],
+    ['CS 2B','Math 1D','Phys 4B'],
+    ['Math 22','Hist 17A','Art 2A'],
+    ['Psych 1','Hist 17B','Econ 1A'],
+  ],
+  math: [
+    ['Math 1A','Engl 1A','CS 1A'],
+    ['Math 1B','Engl 1B','Phys 4A'],
+    ['Math 1C','Phys 4B','Psych 1'],
+    ['Math 1D','CS 1B','Hist 17A'],
+    ['Math 22','Econ 1A','Hist 17B'],
+    ['CS 2A','Art 2A','Music 1'],
+  ],
+  bio: [
+    ['Bio 1A','Chem 1A','Engl 1A'],
+    ['Bio 1B','Chem 1B','Math 1A'],
+    ['Chem 12A','Math 1B','Engl 1B'],
+    ['Chem 12B','Phys 4A','Psych 1'],
+    ['Bio 40A','Phys 4B','Hist 17A'],
+    ['Bio 40B','Econ 1A','Hist 17B'],
+  ],
+  business: [
+    ['Econ 1A','Math 1A','Engl 1A'],
+    ['Econ 1B','Actg 1A','Engl 1B'],
+    ['Actg 1B','Bus 53','Psych 1'],
+    ['Math 10','Hist 17A','Art 2A'],
+    ['CS 1A','Hist 17B','Music 1'],
+    ['Bus 18','Econ 10','Econ 2'],
+  ],
+  psychology: [
+    ['Psych 1','Engl 1A','Math 10'],
+    ['Psych 2','Engl 1B','Bio 10'],
+    ['Psych 4','Hist 17A','Math 1A'],
+    ['Psych 10','Hist 17B','Art 2A'],
+    ['Psych 14','Econ 1A','Music 1'],
+    ['Psych 22','Soc 1','CS 1A'],
+  ],
+  english: [
+    ['Engl 1A','Hist 17A','Art 2A'],
+    ['Engl 1B','Hist 17B','Music 1'],
+    ['Engl 5','Psych 1','Math 1A'],
+    ['Engl 6','Soc 1','Econ 1A'],
+    ['Engl 10','Hist 4A','CS 1A'],
+    ['Engl 22','Hist 4B','Philo 1'],
+  ],
+  custom: [[],[],[],[],[],[]],
+};
+
+// UC-specific notes and ASSIST links (Foothill institution ID on ASSIST is 113)
+const UC_INFO = {
+  ucb:  { name:'UC Berkeley',      id:1,   tag:'Highly competitive. CS requires strong grades in Math 1A-1D, CS 1A-2B, and Phys 4A-4B. Min 3.5 GPA recommended for engineering.' },
+  ucla: { name:'UCLA',             id:4,   tag:'Impacted major. CS & engineering require calculus, programming sequence, and physics. Min 3.4 GPA. TAG not available for CS.' },
+  ucsd: { name:'UC San Diego',     id:7,   tab:'CS requires Math 1A-1D, CS 1A, 1B, 2A, 2B, and Phys 4A. Strong ASSIST agreements with Foothill.' },
+  ucsb: { name:'UC Santa Barbara', id:8,   tag:'TAG available for many majors. CS and engineering require full calculus and programming sequence.' },
+  uci:  { name:'UC Irvine',        id:5,   tag:'TAG available (3.4 GPA). CS requires Math 1A-1C, CS 1A-2A, and Phys 4A-4B.' },
+  ucd:  { name:'UC Davis',         id:3,   tag:'TAG available (3.2 GPA for most majors). Strong articulation with Foothill for STEM and business.' },
+  ucsc: { name:'UC Santa Cruz',    id:11,  tag:'TAG available (3.0 GPA). CS and engineering have strong articulation. Good option for CS transfer.' },
+  ucr:  { name:'UC Riverside',     id:9,   tag:'TAG available (3.0 GPA). Less competitive — good safety option. Strong STEM articulation with Foothill.' },
+  ucm:  { name:'UC Merced',        id:10,  tag:'TAG available (2.8 GPA). Newest UC campus. Growing STEM programs. Great option for guaranteed admission.' },
+};
+
+const MAJOR_LABELS = {
+  cs:'Computer Science', math:'Mathematics', bio:'Biology / Pre-Med',
+  business:'Business / Economics', psychology:'Psychology', english:'English / Humanities', custom:'Custom'
+};
+
+const ASSIST_BASE = 'https://assist.org/transfer/report?year=74&institution=113&agreement=';
+
+function onPlannerChange() {
+  const major = document.getElementById('planner-major').value;
+  const uc = document.getElementById('planner-uc').value;
+  if (major) loadMajorPlan(major);
+  if (major && uc) showRequirements(major, uc);
+  else document.getElementById('requirements-panel').style.display = 'none';
+}
+
+function showRequirements(major, uc) {
+  const ucInfo = UC_INFO[uc];
+  const req = REQUIRED_COURSES[major] || [];
+  const panel = document.getElementById('requirements-panel');
+  panel.style.display = 'block';
+  document.getElementById('req-title').textContent =
+    `${MAJOR_LABELS[major]} → ${ucInfo.name} · Transfer requirements`;
+  document.getElementById('req-body').textContent = ucInfo.tag || ucInfo.tab || '';
+  document.getElementById('assist-link').href =
+    `${ASSIST_BASE}${ucInfo.id}&reportType=Major&department=all`;
+  document.getElementById('req-courses').innerHTML = req.map(c =>
+    `<span style="background:#fff3cd;color:#7a4f00;border:1px solid #f4a636;border-radius:999px;padding:3px 10px;font-size:11px;font-family:var(--mono);">${c}</span>`
+  ).join('');
+}
+
+function loadMajorPlan(major) {
+  if (!major) return;
+  plannerData = MAJOR_PLANS[major].map(arr => [...arr]);
+  bankData = [];
+  renderPlanner();
+  renderBank();
+}
+
+let plannerData = TERMS.map(() => []);
+let bankData = [];
+let dragSrc = null;
+
+function renderPlanner() {
+  const req = REQUIRED_COURSES[document.getElementById('planner-major').value] || [];
+  const grid = document.getElementById('planner-grid');
+  grid.innerHTML = TERMS.map((term, ti) => `
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;">
+      <div style="background:var(--green);color:#fff;font-size:11px;font-weight:500;padding:8px 12px;letter-spacing:0.04em;font-family:var(--mono);">${term}</div>
+      <div id="quarter-${ti}" style="min-height:80px;padding:8px;display:flex;flex-direction:column;gap:6px;"
+        ondragover="event.preventDefault()"
+        ondrop="dropToQuarter(event,${ti})">
+        ${plannerData[ti].map((course,ci) => courseChip(course, ti, ci, req.includes(course))).join('')}
+      </div>
+    </div>
+  `).join('');
+}
+
+function courseChip(course, ti, ci, isRequired) {
+  const bg = isRequired ? '#fff3cd' : 'var(--green-pale)';
+  const color = isRequired ? '#7a4f00' : 'var(--green)';
+  const border = isRequired ? '1px solid #f4a636' : '1px solid rgba(139,26,26,0.15)';
+  return `<div draggable="true"
+    ondragstart="dragStart(event,'quarter',${ti},${ci})"
+    ondragend="dragEnd()"
+    style="background:${bg};color:${color};border:${border};border-radius:6px;padding:5px 10px;font-size:12px;font-family:var(--mono);cursor:grab;display:flex;justify-content:space-between;align-items:center;gap:6px;">
+    <span>${course}</span>
+    <span onclick="removeFromQuarter(${ti},${ci})" style="cursor:pointer;opacity:0.5;font-size:14px;line-height:1;">×</span>
+  </div>`;
+}
+
+function bankChip(course, bi) {
+  return `<div draggable="true"
+    ondragstart="dragStart(event,'bank',null,${bi})"
+    ondragend="dragEnd()"
+    style="background:var(--bg);color:var(--text-2);border:1px solid var(--border-strong);border-radius:6px;padding:5px 10px;font-size:12px;font-family:var(--mono);cursor:grab;display:flex;justify-content:space-between;align-items:center;gap:6px;">
+    <span>${course}</span>
+    <span onclick="removeFromBank(${bi})" style="cursor:pointer;opacity:0.5;font-size:14px;line-height:1;">×</span>
+  </div>`;
+}
+
+function renderBank() {
+  const el = document.getElementById('course-bank');
+  el.innerHTML = bankData.map((c,i) => bankChip(c,i)).join('');
+  if (!bankData.length) el.innerHTML = '<p style="font-size:11px;color:var(--text-3);text-align:center;padding:8px 0;">Drop courses here</p>';
+}
+
+function dragStart(e, src, ti, ci) { dragSrc = {src,ti,ci}; e.dataTransfer.effectAllowed='move'; }
+function dragEnd() { dragSrc = null; }
+
+function dropToQuarter(e, targetTi) {
+  e.preventDefault();
+  if (!dragSrc) return;
+  let course;
+  if (dragSrc.src === 'quarter') {
+    course = plannerData[dragSrc.ti][dragSrc.ci];
+    plannerData[dragSrc.ti].splice(dragSrc.ci, 1);
+  } else {
+    course = bankData[dragSrc.ci];
+    bankData.splice(dragSrc.ci, 1);
+    renderBank();
+  }
+  plannerData[targetTi].push(course);
+  renderPlanner();
+}
+
+function dropToBank(e) {
+  e.preventDefault();
+  if (!dragSrc || dragSrc.src !== 'quarter') return;
+  const course = plannerData[dragSrc.ti][dragSrc.ci];
+  plannerData[dragSrc.ti].splice(dragSrc.ci, 1);
+  bankData.push(course);
+  renderBank();
+  renderPlanner();
+}
+
+function removeFromQuarter(ti, ci) {
+  bankData.push(plannerData[ti][ci]);
+  plannerData[ti].splice(ci, 1);
+  renderBank();
+  renderPlanner();
+}
+
+function removeFromBank(bi) {
+  bankData.splice(bi, 1);
+  renderBank();
+}
+
+function addToBank() {
+  const input = document.getElementById('bank-input');
+  const val = input.value.trim();
+  if (!val) return;
+  bankData.push(val);
+  renderBank();
+  input.value = '';
+  input.focus();
+}
+
+async function savePlan() {
+  const name = document.getElementById('planner-name').value.trim();
+  if (!name) { showPlannerMsg('Please enter a name or ID to save your plan.', false); return; }
+  const payload = {
+    student_id: name,
+    major: document.getElementById('planner-major').value || 'custom',
+    target_uc: document.getElementById('planner-uc').value || null,
+    plan: JSON.stringify(plannerData),
+    bank: JSON.stringify(bankData),
+  };
+  try {
+    await dbInsert('course_plans', payload);
+    showPlannerMsg('Plan saved! Use your name to load it next time.', true);
+  } catch(e) {
+    console.error(e);
+    showPlannerMsg('Could not save. Make sure the course_plans table is set up in Supabase.', false);
+  }
+}
+
+async function loadPlan() {
+  const name = document.getElementById('planner-name').value.trim();
+  if (!name) { showPlannerMsg('Enter your name or ID to load your saved plan.', false); return; }
+  try {
+    const rows = await dbSelect('course_plans', `student_id=eq.${encodeURIComponent(name)}&order=created_at.desc&limit=1`);
+    if (!rows.length) { showPlannerMsg('No saved plan found for that name.', false); return; }
+    const row = rows[0];
+    plannerData = JSON.parse(row.plan);
+    bankData = JSON.parse(row.bank || '[]');
+    document.getElementById('planner-major').value = row.major || '';
+    document.getElementById('planner-uc').value = row.target_uc || '';
+    onPlannerChange();
+    showPlannerMsg('Plan loaded!', true);
+  } catch(e) {
+    console.error(e);
+    showPlannerMsg('Could not load plan.', false);
+  }
+}
+
+function showPlannerMsg(text, success) {
+  const msg = document.getElementById('planner-msg');
+  msg.textContent = text;
+  msg.className = 'banner ' + (success ? 'success' : 'error');
+  msg.style.display = 'block';
+  setTimeout(() => { msg.style.display = 'none'; }, 4000);
 }
 
 initCharts();
