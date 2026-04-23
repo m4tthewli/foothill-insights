@@ -202,6 +202,11 @@
     <div class="metric"><div class="metric-val" id="m-drop">—</div><div class="metric-lbl">Drop rate</div><div class="metric-delta delta-up" id="m-drop-d"></div></div>
   </div>
 
+  <div id="no-data-msg" style="display:none;text-align:center;padding:3rem 1rem;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:1.5rem;">
+    <div style="font-size:32px;margin-bottom:12px;">📭</div>
+    <p style="font-size:15px;font-weight:500;color:var(--text);margin-bottom:6px;">No responses yet</p>
+    <p style="font-size:13px;color:var(--text-3);">Be the first to <a href="#" onclick="showPage('submit',document.querySelectorAll('.nav-link')[1]);return false;" style="color:var(--green);">share your experience</a> and help future Foothill students!</p>
+  </div>
   <div class="chart-grid">
     <div class="card">
       <p class="card-title">Stress by course load</p>
@@ -240,11 +245,7 @@
 
   <div class="card" style="margin-bottom:1.5rem">
     <p class="section-label" style="margin-bottom:6px">Key insights from Foothill students</p>
-    <div class="insight-row"><span class="dot" style="background:#e24b4a"></span><span>Students taking <strong>3+ STEM courses</strong> report <strong>40% higher stress</strong> (8.2 vs 5.9 avg) and study 6+ more hours per week.</span></div>
-    <div class="insight-row"><span class="dot" style="background:#BA7517"></span><span><strong>Week 7 (midterms)</strong> and <strong>week 15 (finals)</strong> are the toughest — average study hours nearly double those weeks.</span></div>
-    <div class="insight-row"><span class="dot" style="background:#8b1a1a"></span><span>The <strong>CS 1A + Math 1A</strong> combo is the hardest pairing at Foothill (8.4/10 stress). Swapping one for an elective drops it to 6.1.</span></div>
-    <div class="insight-row"><span class="dot" style="background:#7F77DD"></span><span>Students who attend study groups 2–3× per week earn a <strong>0.31 higher GPA</strong> and report 1.4 pts lower stress.</span></div>
-    <div class="insight-row"><span class="dot" style="background:#378ADD"></span><span><strong>Humanities-only</strong> students maintain the highest avg GPA (3.48) with the fewest hours studied (11.2h/week).</span></div>
+    <p style="font-size:13px;color:var(--text-3);padding:0.5rem 0;">Insights will appear here once enough students have submitted their data.</p>
   </div>
 </div>
 
@@ -395,12 +396,8 @@ async function dbInsert(table, data) {
   return true;
 }
 
-const FALLBACK = {
-  all:   { gpa:3.21, hrs:14.2, stress:6.4, drop:12, grades:[8,22,34,20,11,5], sv:[[4.8,4.2,3.9],[6.1,5.5,4.8],[7.2,6.3,5.6],[8.2,7.1,6.4]], count:847 },
-  stem:  { gpa:3.05, hrs:17.1, stress:7.6, drop:15, grades:[6,18,29,26,14,7],  sv:[[5.3,4.8,4.1],[7.0,6.1,5.2],[8.0,7.0,6.0],[8.9,7.9,6.9]], count:340 },
-  arts:  { gpa:3.48, hrs:11.2, stress:4.9, drop:7,  grades:[11,27,38,16,6,2],  sv:[[3.9,3.5,3.2],[5.0,4.5,4.0],[6.0,5.4,4.9],[7.0,6.2,5.5]], count:285 },
-  mixed: { gpa:3.18, hrs:13.8, stress:6.1, drop:11, grades:[9,21,33,22,10,5],  sv:[[4.6,4.0,3.7],[5.8,5.2,4.6],[7.0,6.1,5.4],[7.9,6.9,6.1]], count:222 },
-};
+const EMPTY = { gpa:0, hrs:0, stress:0, drop:0, grades:[0,0,0,0,0,0], sv:[[0,0,0],[0,0,0],[0,0,0],[0,0,0]], count:0 };
+const FALLBACK = { all:EMPTY, stem:EMPTY, arts:EMPTY, mixed:EMPTY };
 
 let dashData = FALLBACK, currentFilter = 'all';
 
@@ -408,11 +405,17 @@ async function loadDashboard() {
   try {
     const rows = await dbSelect('submissions', 'select=*&order=created_at.desc');
     document.getElementById('stat-responses').textContent = rows.length.toLocaleString();
-    if (rows.length) dashData = aggregateRows(rows);
+    if (rows.length) {
+      dashData = aggregateRows(rows);
+      document.getElementById('no-data-msg').style.display = 'none';
+    } else {
+      document.getElementById('no-data-msg').style.display = 'block';
+    }
     renderDashboard(dashData[currentFilter]);
   } catch(e) {
     console.warn('Supabase load failed:', e);
-    document.getElementById('stat-responses').textContent = FALLBACK.all.count.toLocaleString();
+    document.getElementById('stat-responses').textContent = '0';
+    document.getElementById('no-data-msg').style.display = 'block';
     renderDashboard(FALLBACK[currentFilter]);
   }
 }
@@ -447,10 +450,12 @@ function computeStressVsLoad(arr) {
 }
 
 function renderDashboard(d) {
-  document.getElementById('m-gpa').textContent = d.gpa.toFixed(2);
-  document.getElementById('m-hrs').textContent = d.hrs.toFixed(1)+'h';
-  document.getElementById('m-stress').innerHTML = d.stress.toFixed(1)+'<span style="font-size:13px;color:var(--text-3)">/10</span>';
-  document.getElementById('m-drop').textContent = d.drop+'%';
+  const hasData = d.count > 0;
+  document.getElementById('m-gpa').textContent = hasData ? d.gpa.toFixed(2) : '—';
+  document.getElementById('m-hrs').textContent = hasData ? d.hrs.toFixed(1)+'h' : '—';
+  document.getElementById('m-stress').innerHTML = hasData ? d.stress.toFixed(1)+'<span style="font-size:13px;color:var(--text-3)">/10</span>' : '—';
+  document.getElementById('m-drop').textContent = hasData ? d.drop+'%' : '—';
+  document.querySelector('.chart-grid').style.display = hasData ? 'grid' : 'none';
   if (gradeChart) { gradeChart.data.datasets[0].data=d.grades; gradeChart.update(); }
   if (stressChart) { stressChart.data.datasets[0].data=d.sv.map(x=>x[0]); stressChart.data.datasets[1].data=d.sv.map(x=>x[1]); stressChart.data.datasets[2].data=d.sv.map(x=>x[2]); stressChart.update(); }
 }
@@ -558,32 +563,14 @@ async function submitForm() {
   }
 }
 
-const COURSES = [
-  { code:'CS 1A',    name:'Intro to programming',       dept:'STEM',       stress:7.8, hrs:12, gpa:3.1, n:142, advice:'Start assignments early — they always take twice as long. Go to office hours weekly.' },
-  { code:'CS 1B',    name:'Intermediate programming',   dept:'STEM',       stress:8.2, hrs:14, gpa:2.9, n:98,  advice:'OOP concepts hit hard in weeks 4–6. Form a study group before midterms.' },
-  { code:'CS 2A',    name:'Data structures',            dept:'STEM',       stress:8.4, hrs:15, gpa:2.8, n:76,  advice:'Trees and graphs take real practice. Start the labs on day 1, not day before.' },
-  { code:'Math 1A',  name:'Calculus I',                 dept:'STEM',       stress:7.5, hrs:11, gpa:3.0, n:201, advice:'Do every practice problem in the book. The final is harder than the midterm.' },
-  { code:'Math 1B',  name:'Calculus II',                dept:'STEM',       stress:8.0, hrs:13, gpa:2.8, n:134, advice:'Series and sequences section is brutal. Budget extra time for that unit.' },
-  { code:'Math 1C',  name:'Multivariable calculus',     dept:'STEM',       stress:7.8, hrs:12, gpa:2.9, n:88,  advice:'Visualize everything in 3D — drawing pictures helps enormously.' },
-  { code:'Chem 1A',  name:'General chemistry I',        dept:'STEM',       stress:7.2, hrs:12, gpa:3.0, n:88,  advice:"Labs are time-consuming. Never skip pre-lab prep or you'll be lost." },
-  { code:'Phys 4A',  name:'General physics I',          dept:'STEM',       stress:8.5, hrs:15, gpa:2.7, n:67,  advice:'Do not take with CS 1B simultaneously. Professor office hours are a lifesaver.' },
-  { code:'Bio 10',   name:'Intro to biology',           dept:'STEM',       stress:5.2, hrs:8,  gpa:3.5, n:143, advice:'Very interesting material. Lab reports take 2–3 hours each — plan for that.' },
-  { code:'Engl 1A',  name:'English composition',        dept:'Humanities', stress:4.1, hrs:7,  gpa:3.7, n:210, advice:'Start essays a full week early. Peer review sessions are genuinely useful.' },
-  { code:'Engl 1B',  name:'English literature',         dept:'Humanities', stress:4.3, hrs:7,  gpa:3.6, n:145, advice:"Keep up with the reading — discussions are where you'll get ideas for papers." },
-  { code:'Hist 17A', name:'US history I',               dept:'Humanities', stress:3.8, hrs:6,  gpa:3.8, n:95,  advice:'Read the textbook closely — exams are very detail-specific.' },
-  { code:'Hist 17B', name:'US history II',              dept:'Humanities', stress:3.9, hrs:6,  gpa:3.8, n:72,  advice:'Similar to 17A. Great professor — go to lecture, not just slides.' },
-  { code:'Psych 1',  name:'Intro to psychology',        dept:'Humanities', stress:3.5, hrs:5,  gpa:3.9, n:178, advice:'Very manageable. Great choice to balance a STEM-heavy term.' },
-  { code:'Econ 1A',  name:'Microeconomics',             dept:'Mixed',      stress:5.8, hrs:8,  gpa:3.4, n:112, advice:'Graphs are everything. Make sure you understand supply/demand intuitively.' },
-  { code:'Art 2A',   name:'Design fundamentals',        dept:'Humanities', stress:3.2, hrs:6,  gpa:3.9, n:55,  advice:'Time-consuming but enjoyable. Great creative outlet alongside heavier courses.' },
-  { code:'Music 1',  name:'Music fundamentals',         dept:'Humanities', stress:2.9, hrs:5,  gpa:4.0, n:44,  advice:'Very approachable. Fun way to satisfy a fine arts requirement.' },
-];
+const COURSES = [];
 
 function stressColor(s) { return s>=8?'#e24b4a':s>=6.5?'#BA7517':'#1D9E75'; }
 function deptClass(d) { return d==='STEM'?'badge-stem':d==='Humanities'?'badge-humanities':'badge-mixed'; }
 
 function renderCourses(list) {
   const el = document.getElementById('course-list');
-  if (!list.length) { el.innerHTML='<p style="font-size:13px;color:var(--text-3);padding:2rem 0">No courses found — try a different search term.</p>'; return; }
+  if (!list.length) { el.innerHTML='<p style="font-size:13px;color:var(--text-3);padding:2rem 0">No course data yet — check back once students start submitting!</p>'; return; }
   el.innerHTML = list.map(c=>`
     <div class="course-card">
       <div style="min-width:68px;text-align:center;flex-shrink:0">
