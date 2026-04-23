@@ -179,7 +179,7 @@
     <p>Real workload data, stress levels, and advice from Foothill students. Plan smarter — know what you're signing up for before week 1.</p>
     <div class="hero-stats">
       <div><div class="hero-stat-val" id="stat-responses">—</div><div class="hero-stat-lbl">Student responses</div></div>
-      <div><div class="hero-stat-val">62</div><div class="hero-stat-lbl">Courses tracked</div></div>
+      <div><div class="hero-stat-val" id="stat-courses">—</div><div class="hero-stat-lbl">Courses tracked</div></div>
       <div><div class="hero-stat-val">Spring '26</div><div class="hero-stat-lbl">Latest term</div></div>
     </div>
   </div>
@@ -707,9 +707,12 @@ async function loadCourseRatings() {
   try {
     const rows = await dbSelect('course_ratings', 'select=*&order=created_at.desc');
     ALL_RATINGS = rows;
-    renderCourses(groupRatings(rows));
+    const grouped = groupRatings(rows);
+    document.getElementById('stat-courses').textContent = grouped.length || '—';
+    renderCourses(grouped);
   } catch(e) {
     console.warn('Could not load course ratings:', e);
+    document.getElementById('stat-courses').textContent = '—';
     renderCourses([]);
   }
 }
