@@ -701,6 +701,82 @@ function filterCourses(q) {
   renderCourses(t?COURSES.filter(c=>c.code.toLowerCase().includes(t)||c.name.toLowerCase().includes(t)):COURSES);
 }
 
+let ALL_RATINGS = [];
+
+async function loadCourseRatings() {
+  try {
+    const rows = await dbSelect('course_ratings', 'select=*&order=created_at.desc');
+    ALL_RATINGS = rows;
+    renderCourses(groupRatings(rows));
+  } catch(e) {
+    console.warn('Could not load course ratings:', e);
+    renderCourses([]);
+  }
+}
+
+function groupRatings(rows) {
+  const map = {};
+  rows.forEach(r => {
+    const key = r.course.trim().toUpperCase();
+    if (!map[key]) map[key] = { course: r.course.trim(), ratings: [] };
+    map[key].ratings.push(r);
+  });
+  return Object.values(map).sort((a,b) => a.course.localeCompare(b.course));
+}
+
+function starHTML(avg) {
+  return [1,2,3,4,5].map(i =>
+    `<span style="color:${i<=Math.round(avg)?'#f4a636':'#ccc'};font-size:16px;">★</span>`
+  ).join('');
+}
+
+function renderCourses(groups) {
+  const el = document.getElementById('course-list');
+  if (!el) return;
+  if (!groups.length) {
+    el.innerHTML = `<div style="text-align:center;padding:3rem 1rem;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius)"><p style="font-size:15px;font-weight:500;color:var(--text);margin-bottom:6px;">No ratings yet</p><p style="font-size:13px;color:var(--text-3);">Be the first to rate a class in the <a href="#" onclick="showPage('rate',document.querySelectorAll('.nav-link')[3]);return false;" style="color:var(--green);">Rate a class</a> tab!</p></div>`;
+    return;
+  }
+  el.innerHTML = groups.map(g => {
+    const rs = g.ratings;
+    const avgRating = (rs.reduce((s,r)=>s+(r.rating||0),0)/rs.length).toFixed(1);
+    const avgDiff = (rs.filter(r=>r.difficulty).reduce((s,r)=>s+(r.difficulty||0),0) / (rs.filter(r=>r.difficulty).length||1)).toFixed(1);
+    const recYes = rs.filter(r=>r.recommend==='yes').length;
+    const recTotal = rs.filter(r=>r.recommend).length;
+    const recPct = recTotal ? Math.round(recYes/recTotal*100) : null;
+    const professors = [...new Set(rs.map(r=>r.professor).filter(Boolean))];
+    const comments = rs.filter(r=>r.comment).slice(0,3);
+    const diffLabels = ['','Very easy','Easy','Moderate','Hard','Very hard'];
+    return `
+    <div class="course-card" style="flex-direction:column;gap:12px;">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px;">
+        <div>
+          <div style="font-size:15px;font-weight:600;color:var(--text);font-family:var(--mono);">${g.course}</div>
+          ${professors.length ? `<div style="font-size:12px;color:var(--text-3);margin-top:3px;">Prof: ${professors.join(', ')}</div>` : ''}
+        </div>
+        <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:center;">
+          <div style="text-align:center;">
+            <div style="display:flex;align-items:center;gap:2px;">${starHTML(avgRating)}<span style="font-size:13px;font-weight:600;color:var(--text);margin-left:4px;">${avgRating}</span></div>
+            <div style="font-size:10px;color:var(--text-3);text-transform:uppercase;letter-spacing:0.05em;margin-top:2px;">${rs.length} rating${rs.length!==1?'s':''}</div>
+          </div>
+          ${recPct!==null ? `<div style="text-align:center;"><div style="font-size:15px;font-weight:600;color:${recPct>=70?'#1D9E75':'#e24b4a'};">${recPct}%</div><div style="font-size:10px;color:var(--text-3);text-transform:uppercase;letter-spacing:0.05em;">recommend</div></div>` : ''}
+          ${rs.filter(r=>r.difficulty).length ? `<div style="text-align:center;"><div style="font-size:13px;font-weight:600;color:var(--text);">${diffLabels[Math.round(avgDiff)]}</div><div style="font-size:10px;color:var(--text-3);text-transform:uppercase;letter-spacing:0.05em;">difficulty</div></div>` : ''}
+        </div>
+      </div>
+      ${comments.length ? `<div style="display:flex;flex-direction:column;gap:6px;">${comments.map(r=>`<div style="background:var(--bg);border-left:3px solid var(--green);border-radius:0 var(--radius-sm) var(--radius-sm) 0;padding:8px 12px;font-size:12px;color:var(--text-2);line-height:1.6;">${r.comment}</div>`).join('')}</div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+function filterCourses(q) {
+  const t = q.trim().toLowerCase();
+  const filtered = t ? groupRatings(ALL_RATINGS.filter(r =>
+    r.course.toLowerCase().includes(t) ||
+    (r.professor && r.professor.toLowerCase().includes(t))
+  )) : groupRatings(ALL_RATINGS);
+  renderCourses(filtered);
+}
+
 function showPage(id,btn) {
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-link').forEach(b=>b.classList.remove('active'));
