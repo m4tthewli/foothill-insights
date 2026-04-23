@@ -706,6 +706,7 @@ function showPage(id,btn) {
   document.querySelectorAll('.nav-link').forEach(b=>b.classList.remove('active'));
   document.getElementById('page-'+id).classList.add('active');
   btn.classList.add('active');
+  if (id === 'explorer') loadCourseRatings();
 }
 
 let currentRating = 0;
