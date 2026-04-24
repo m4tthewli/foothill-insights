@@ -13,7 +13,7 @@
     --green-light: #b22222;
     --green-pale: #faeaea;
     --green-mid: #e07070;
-    --accent: #f4a636;
+    --accent: #f4a636; /* orange - overridden in dark mode */
     --red: #e24b4a;
     --blue: #378ADD;
     --text: #1a1a1a;
@@ -29,6 +29,68 @@
     --mono: 'DM Mono', monospace;
   }
 
+  [data-theme="dark"] {
+    --green: #7a0e0e;
+    --green-light: #a01515;
+    --green-pale: #2a1a1a;
+    --green-mid: #e07070;
+    --accent: #e0e0e0;
+    --red: #e24b4a;
+    --blue: #5b9bd5;
+    --text: #f0f0f0;
+    --text-2: #b0b0b0;
+    --text-3: #777;
+    --bg: #121212;
+    --surface: #1e1e1e;
+    --border: rgba(255,255,255,0.07);
+    --border-strong: rgba(255,255,255,0.13);
+    --star-color: #f4a636;
+    --star-empty: #444;
+  }
+  [data-theme="dark"] nav { background: #1a0a0a; }
+  [data-theme="dark"] .chip.active { background: #7a0e0e !important; border-color: #7a0e0e !important; color: #fff !important; }
+  [data-theme="dark"] .chip:hover { border-color: #a01515 !important; color: #a01515 !important; }
+  [data-theme="dark"] .metric::before { background: #7a0e0e !important; }
+  [data-theme="dark"] .tag.sel { background: #7a0e0e !important; border-color: #7a0e0e !important; }
+  [data-theme="dark"] .submit-btn { background: #7a0e0e !important; }
+  [data-theme="dark"] .course-tip { border-color: #7a0e0e !important; }
+  [data-theme="dark"] .hero { background: #1a0a0a; }
+  [data-theme="dark"] .hero-eyebrow { color: rgba(255,255,255,0.55) !important; }
+  [data-theme="dark"] .nav-logo { background: rgba(255,255,255,0.12) !important; }
+  [data-theme="dark"] .field input,
+  [data-theme="dark"] .field select,
+  [data-theme="dark"] .field textarea { background: #2a2a2a; border-color: rgba(255,255,255,0.12); color: var(--text); }
+  [data-theme="dark"] .search-bar { background: #2a2a2a; border-color: rgba(255,255,255,0.12); color: var(--text); }
+  [data-theme="dark"] .tag { background: #2a2a2a; }
+  [data-theme="dark"] .chip { background: #1e1e1e; }
+  [data-theme="dark"] .gpa-name,
+  [data-theme="dark"] .gpa-units,
+  [data-theme="dark"] .gpa-grade { background: #2a2a2a !important; border-color: rgba(255,255,255,0.12) !important; color: var(--text) !important; }
+
+
+  .dark-toggle {
+    background: rgba(255,255,255,0.12);
+    border: none;
+    border-radius: 999px;
+    width: 36px;
+    height: 20px;
+    cursor: pointer;
+    position: relative;
+    transition: background 0.2s;
+    flex-shrink: 0;
+  }
+  .dark-toggle::after {
+    content: '';
+    position: absolute;
+    width: 14px; height: 14px;
+    background: #fff;
+    border-radius: 50%;
+    top: 3px; left: 3px;
+    transition: transform 0.2s;
+  }
+  [data-theme="dark"] .dark-toggle { background: rgba(255,255,255,0.25); }
+  [data-theme="dark"] .dark-toggle::after { transform: translateX(16px); }
+
   * { box-sizing: border-box; margin: 0; padding: 0; }
 
   body { font-family: var(--font); background: var(--bg); color: var(--text); font-size: 15px; line-height: 1.6; min-height: 100vh; }
@@ -39,7 +101,7 @@
     padding: 0 2rem; height: 60px; border-bottom: 1px solid rgba(255,255,255,0.08);
   }
   .nav-brand { display: flex; align-items: center; gap: 12px; text-decoration: none; }
-  .nav-logo { width: 34px; height: 34px; background: var(--accent); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 13px; color: #fff; letter-spacing: -0.3px; flex-shrink: 0; }
+  .nav-logo { width: 34px; height: 34px; background: #8b1a1a; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 13px; color: #fff; letter-spacing: -0.3px; flex-shrink: 0; }
   .nav-name { font-size: 15px; font-weight: 600; color: #fff; letter-spacing: -0.2px; }
   .nav-sub { font-size: 11px; color: rgba(255,255,255,0.5); }
   .nav-links { display: flex; gap: 4px; }
@@ -51,7 +113,7 @@
   .hero::before { content: ''; position: absolute; right: -60px; top: -60px; width: 320px; height: 320px; border-radius: 50%; background: rgba(255,255,255,0.03); }
   .hero::after { content: ''; position: absolute; right: 80px; bottom: -80px; width: 200px; height: 200px; border-radius: 50%; background: rgba(255,255,255,0.04); }
   .hero-inner { max-width: 900px; margin: 0 auto; position: relative; z-index: 1; }
-  .hero-eyebrow { font-size: 11px; font-weight: 500; color: var(--accent); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 10px; font-family: var(--mono); }
+  .hero-eyebrow { font-size: 11px; font-weight: 500; color: rgba(255,255,255,0.7); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 10px; font-family: var(--mono); }
   .hero h1 { font-size: 32px; font-weight: 600; letter-spacing: -0.5px; margin-bottom: 10px; line-height: 1.2; }
   .hero p { font-size: 15px; color: rgba(255,255,255,0.65); max-width: 500px; line-height: 1.7; margin-bottom: 2rem; }
   .hero-stats { display: flex; gap: 2.5rem; flex-wrap: wrap; }
@@ -118,7 +180,7 @@
 
   .banner { border-radius: var(--radius-sm); padding: 12px 16px; margin-bottom: 1.25rem; font-size: 13px; display: none; }
   .banner.success { background: var(--green-pale); color: var(--green); border: 1px solid rgba(139,26,26,0.2); }
-  .banner.error { background: #fff5f5; color: #c0392b; border: 1px solid rgba(192,57,43,0.2); }
+  .banner.error { background: #fff5f5; color: #7a0e0e; border: 1px solid rgba(192,57,43,0.2); }
 
   .search-bar { width: 100%; font-size: 14px; padding: 11px 16px; border-radius: var(--radius); border: 1px solid var(--border-strong); background: var(--surface); color: var(--text); font-family: var(--font); outline: none; margin-bottom: 1.25rem; transition: border-color 0.15s; }
   .search-bar:focus { border-color: var(--green); }
@@ -169,6 +231,11 @@
     <button class="nav-link" onclick="showPage('submit',this)">Share your experience</button>
     <button class="nav-link" onclick="showPage('rate',this)">Rate a class</button>
     <button class="nav-link" onclick="showPage('planner',this)">Course planner</button>
+    <button class="nav-link" onclick="showPage('gpa',this)">GPA calculator</button>
+  </div>
+  <div style="display:flex;align-items:center;gap:8px;margin-left:8px;">
+    <span style="font-size:11px;color:rgba(255,255,255,0.5);" id="dark-label">☀️</span>
+    <button class="dark-toggle" onclick="toggleDark()" aria-label="Toggle dark mode"></button>
   </div>
 </nav>
 
@@ -546,6 +613,66 @@
   </div>
 </div>
 
+
+<!-- GPA CALCULATOR -->
+<div id="page-gpa" class="page" style="max-width:640px">
+  <div style="margin-top:0.5rem;margin-bottom:1.25rem;">
+    <p style="font-size:18px;font-weight:600;color:var(--text);margin-bottom:4px;letter-spacing:-0.2px;">GPA calculator</p>
+    <p style="font-size:13px;color:var(--text-3);">Enter your courses, units, and grades to calculate your GPA. All grades must be C or better to count toward transfer.</p>
+  </div>
+
+  <div class="form-card" style="margin-bottom:1rem;">
+    <div style="display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:8px;align-items:center;margin-bottom:10px;">
+      <p style="font-size:11px;font-weight:500;color:var(--text-3);text-transform:uppercase;letter-spacing:0.05em;">Course (optional)</p>
+      <p style="font-size:11px;font-weight:500;color:var(--text-3);text-transform:uppercase;letter-spacing:0.05em;">Units</p>
+      <p style="font-size:11px;font-weight:500;color:var(--text-3);text-transform:uppercase;letter-spacing:0.05em;">Grade</p>
+      <span></span>
+    </div>
+    <div id="gpa-rows" style="display:flex;flex-direction:column;gap:8px;"></div>
+    <button type="button" onclick="addGpaRow()" style="margin-top:12px;font-size:12px;padding:7px 14px;border-radius:var(--radius-sm);border:1px solid var(--border-strong);background:var(--bg);color:var(--text-2);cursor:pointer;font-family:var(--font);">+ Add course</button>
+  </div>
+
+  <!-- Result -->
+  <div class="card" style="margin-bottom:1rem;">
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;text-align:center;">
+      <div>
+        <div id="gpa-result" style="font-size:36px;font-weight:600;color:var(--green);font-family:var(--mono);letter-spacing:-1px;">—</div>
+        <div style="font-size:11px;color:var(--text-3);text-transform:uppercase;letter-spacing:0.05em;margin-top:4px;">GPA</div>
+      </div>
+      <div>
+        <div id="gpa-units" style="font-size:36px;font-weight:600;color:var(--text);font-family:var(--mono);letter-spacing:-1px;">—</div>
+        <div style="font-size:11px;color:var(--text-3);text-transform:uppercase;letter-spacing:0.05em;margin-top:4px;">Total units</div>
+      </div>
+      <div>
+        <div id="gpa-status" style="font-size:14px;font-weight:500;color:var(--text-3);margin-top:8px;line-height:1.5;"></div>
+        <div style="font-size:11px;color:var(--text-3);text-transform:uppercase;letter-spacing:0.05em;margin-top:4px;">Transfer status</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Target GPA -->
+  <div class="card">
+    <p style="font-size:13px;font-weight:500;color:var(--text);margin-bottom:12px;">What grade do I need?</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:8px;align-items:end;">
+      <div>
+        <p style="font-size:11px;color:var(--text-3);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.04em;">Target GPA</p>
+        <input type="number" id="target-gpa" min="0" max="4" step="0.01" placeholder="e.g. 3.5" style="width:100%;font-size:14px;padding:8px 10px;border-radius:var(--radius-sm);border:1px solid var(--border-strong);background:var(--bg);color:var(--text);font-family:var(--font);outline:none;">
+      </div>
+      <div>
+        <p style="font-size:11px;color:var(--text-3);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.04em;">Remaining units</p>
+        <input type="number" id="remaining-units" min="0" step="1" placeholder="e.g. 20" style="width:100%;font-size:14px;padding:8px 10px;border-radius:var(--radius-sm);border:1px solid var(--border-strong);background:var(--bg);color:var(--text);font-family:var(--font);outline:none;">
+      </div>
+      <div style="align-self:end;">
+        <button onclick="calcTarget()" style="width:100%;background:var(--green);color:#fff;border:none;padding:9px 14px;border-radius:var(--radius-sm);font-size:13px;font-family:var(--font);cursor:pointer;">Calculate</button>
+      </div>
+      <div></div>
+    </div>
+    <p id="target-result" style="font-size:13px;color:var(--text);margin-top:12px;line-height:1.6;display:none;"></p>
+  </div>
+
+  <p style="font-size:11px;color:var(--text-3);margin-top:1rem;line-height:1.6;">UC transfer requires a minimum 2.4 GPA. CSU requires 2.0. Competitive majors typically expect 3.3+. Always verify with a Foothill counselor.</p>
+</div>
+
 <script>
 const SUPABASE_URL = 'https://usmohqyczqcbqpnsbsiw.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVzbW9ocXljenFjYnFwbnNic2l3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5MTM1NzMsImV4cCI6MjA5MjQ4OTU3M30.R2a7k2oh51cvFt6xvqzI5AFiU6aOPUksIYwKHUNPz5g';
@@ -707,7 +834,7 @@ function addRatingRow() {
 
 function setStars(el, val) {
   const stars = el.closest('.star-group').querySelectorAll('span');
-  stars.forEach((s,i) => { s.style.color = i < val ? '#f4a636' : '#ccc'; s.dataset.selected = i < val ? '1' : '0'; });
+  stars.forEach((s,i) => { s.style.color = i < val ? 'var(--star-color, #f4a636)' : 'var(--star-empty, #ccc)'; s.dataset.selected = i < val ? '1' : '0'; });
   el.closest('.star-group').dataset.rating = val;
 }
 
@@ -901,7 +1028,7 @@ const starLabels = ['','Poor','Fair','Good','Great','Excellent'];
 function setStars(val) {
   currentRating = val;
   document.querySelectorAll('#star-row span[data-val]').forEach(s => {
-    s.style.color = parseInt(s.dataset.val) <= val ? '#f4a636' : '#ccc';
+    s.style.color = parseInt(s.dataset.val) <= val ? 'var(--star-color, #f4a636)' : 'var(--star-empty, #ccc)';
   });
   document.getElementById('star-label').textContent = starLabels[val];
 }
@@ -1328,6 +1455,138 @@ function renderCalGETC() {
     </div>
   `).join('');
 }
+
+
+// ── GPA CALCULATOR ──────────────────────────────────────────
+
+const GRADE_POINTS = {
+  'A+':4.0,'A':4.0,'A-':3.7,
+  'B+':3.3,'B':3.0,'B-':2.7,
+  'C+':2.3,'C':2.0,'C-':1.7,
+  'D+':1.3,'D':1.0,'D-':0.7,
+  'F':0.0,'W':null,'P':null,'NP':null
+};
+
+const GRADE_OPTIONS = ['A+','A','A-','B+','B','B-','C+','C','C-','D+','D','D-','F','W','P','NP'];
+
+function addGpaRow() {
+  const container = document.getElementById('gpa-rows');
+  const idx = container.children.length;
+  const div = document.createElement('div');
+  div.style.cssText = 'display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:8px;align-items:center;';
+  div.innerHTML = `
+    <input type="text" placeholder="e.g. CS 1A" style="font-size:13px;padding:7px 10px;border-radius:var(--radius-sm);border:1px solid var(--border-strong);background:var(--bg);color:var(--text);font-family:var(--font);outline:none;" class="gpa-name">
+    <input type="number" min="0" max="12" step="0.5" placeholder="5" style="font-size:13px;padding:7px 10px;border-radius:var(--radius-sm);border:1px solid var(--border-strong);background:var(--bg);color:var(--text);font-family:var(--font);outline:none;" class="gpa-units" oninput="calcGpa()">
+    <select style="font-size:13px;padding:7px 10px;border-radius:var(--radius-sm);border:1px solid var(--border-strong);background:var(--bg);color:var(--text);font-family:var(--font);outline:none;" class="gpa-grade" onchange="calcGpa()">
+      <option value="">Grade</option>
+      ${GRADE_OPTIONS.map(g=>`<option value="${g}">${g}</option>`).join('')}
+    </select>
+    <span onclick="this.parentElement.remove();calcGpa();" style="cursor:pointer;color:var(--text-3);font-size:18px;line-height:1;padding:0 4px;">×</span>
+  `;
+  container.appendChild(div);
+  div.querySelector('.gpa-units').focus();
+}
+
+function calcGpa() {
+  const rows = document.querySelectorAll('#gpa-rows > div');
+  let totalPoints = 0, totalUnits = 0, hasData = false;
+
+  rows.forEach(row => {
+    const units = parseFloat(row.querySelector('.gpa-units').value);
+    const grade = row.querySelector('.gpa-grade').value;
+    if (!units || !grade || !(grade in GRADE_POINTS)) return;
+    const pts = GRADE_POINTS[grade];
+    if (pts === null) return; // W, P, NP don't count
+    totalPoints += pts * units;
+    totalUnits += units;
+    hasData = true;
+  });
+
+  if (!hasData) {
+    document.getElementById('gpa-result').textContent = '—';
+    document.getElementById('gpa-units').textContent = '—';
+    document.getElementById('gpa-status').textContent = '';
+    return;
+  }
+
+  const gpa = totalUnits > 0 ? (totalPoints / totalUnits) : 0;
+  document.getElementById('gpa-result').textContent = gpa.toFixed(2);
+  document.getElementById('gpa-units').textContent = totalUnits;
+
+  const statusEl = document.getElementById('gpa-status');
+  if (gpa >= 3.5) { statusEl.textContent = 'Excellent ✓'; statusEl.style.color = '#1D9E75'; }
+  else if (gpa >= 3.0) { statusEl.textContent = 'Good ✓'; statusEl.style.color = '#1D9E75'; }
+  else if (gpa >= 2.4) { statusEl.textContent = 'UC eligible ✓'; statusEl.style.color = '#BA7517'; }
+  else if (gpa >= 2.0) { statusEl.textContent = 'CSU eligible'; statusEl.style.color = '#BA7517'; }
+  else { statusEl.textContent = 'Below transfer minimum'; statusEl.style.color = '#e24b4a'; }
+}
+
+function calcTarget() {
+  const target = parseFloat(document.getElementById('target-gpa').value);
+  const remaining = parseFloat(document.getElementById('remaining-units').value);
+  const resultEl = document.getElementById('target-result');
+
+  if (!target || !remaining) {
+    resultEl.style.display = 'none';
+    return;
+  }
+
+  // Get current totals
+  const rows = document.querySelectorAll('#gpa-rows > div');
+  let totalPoints = 0, totalUnits = 0;
+  rows.forEach(row => {
+    const units = parseFloat(row.querySelector('.gpa-units').value);
+    const grade = row.querySelector('.gpa-grade').value;
+    if (!units || !grade || !(grade in GRADE_POINTS)) return;
+    const pts = GRADE_POINTS[grade];
+    if (pts === null) return;
+    totalPoints += pts * units;
+    totalUnits += units;
+  });
+
+  const neededPoints = (target * (totalUnits + remaining)) - totalPoints;
+  const neededGpa = neededPoints / remaining;
+
+  resultEl.style.display = 'block';
+  if (neededGpa > 4.0) {
+    resultEl.innerHTML = `To reach a <strong>${target.toFixed(2)}</strong> GPA in <strong>${remaining}</strong> remaining units, you would need a <strong>${neededGpa.toFixed(2)}/4.0</strong> average — which is not possible. Consider increasing your remaining units or adjusting your target GPA.`;
+    resultEl.style.color = '#e24b4a';
+  } else if (neededGpa < 0) {
+    resultEl.innerHTML = `You've already achieved a <strong>${target.toFixed(2)}</strong> GPA or higher. Keep it up!`;
+    resultEl.style.color = '#1D9E75';
+  } else {
+    const gradeNeeded = neededGpa >= 3.7 ? 'A−/A' : neededGpa >= 3.3 ? 'B+' : neededGpa >= 3.0 ? 'B' : neededGpa >= 2.7 ? 'B−' : neededGpa >= 2.3 ? 'C+' : 'C';
+    resultEl.innerHTML = `To reach a <strong>${target.toFixed(2)}</strong> GPA, you need an average of <strong>${neededGpa.toFixed(2)}</strong> (roughly a <strong>${gradeNeeded}</strong>) across your remaining <strong>${remaining}</strong> units.`;
+    resultEl.style.color = 'var(--text)';
+  }
+}
+
+// Add 3 starter rows
+document.addEventListener('DOMContentLoaded', () => {
+  addGpaRow(); addGpaRow(); addGpaRow();
+});
+
+
+// ── DARK MODE ──────────────────────────────────────────────
+function toggleDark() {
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  document.documentElement.setAttribute('data-theme', isDark ? 'light' : 'dark');
+  document.getElementById('dark-label').textContent = isDark ? '☀️' : '🌙';
+  localStorage.setItem('theme', isDark ? 'light' : 'dark');
+}
+
+// Load saved preference
+(function() {
+  const saved = localStorage.getItem('theme') ||
+    (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  if (saved === 'dark') {
+    document.documentElement.setAttribute('data-theme', 'dark');
+    document.addEventListener('DOMContentLoaded', () => {
+      const lbl = document.getElementById('dark-label');
+      if (lbl) lbl.textContent = '🌙';
+    });
+  }
+})();
 
 initCharts();
 loadDashboard();
