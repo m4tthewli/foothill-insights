@@ -317,6 +317,23 @@
   </div>
 </div>
 
+  <!-- Student Advice Section -->
+  <div class="card" style="margin-bottom:1.5rem;margin-top:0;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;flex-wrap:wrap;gap:8px;">
+      <p class="section-label" style="margin-bottom:0;">Advice from fellow Foothill students</p>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;">
+        <button class="chip active" onclick="filterAdvice('all',this)" style="font-size:11px;padding:4px 10px;">All</button>
+        <button class="chip" onclick="filterAdvice('stem',this)" style="font-size:11px;padding:4px 10px;">STEM</button>
+        <button class="chip" onclick="filterAdvice('arts',this)" style="font-size:11px;padding:4px 10px;">Humanities</button>
+        <button class="chip" onclick="filterAdvice('mixed',this)" style="font-size:11px;padding:4px 10px;">Mixed</button>
+      </div>
+    </div>
+    <div id="advice-container">
+      <p style="font-size:13px;color:var(--text-3);padding:0.5rem 0;">Student advice will appear here once submissions come in.</p>
+    </div>
+    <button id="advice-load-more" onclick="loadMoreAdvice()" style="display:none;margin-top:1rem;font-size:12px;padding:7px 16px;border-radius:var(--radius-sm);border:1px solid var(--border-strong);background:var(--bg);color:var(--text-2);cursor:pointer;font-family:var(--font);width:100%;">Load more advice</button>
+  </div>
+
 <!-- SUBMIT -->
 <div id="page-submit" class="page" style="max-width:680px">
   <div id="submit-success" class="banner success">Your data has been saved — thank you! It will appear in the dashboard once reviewed.</div>
@@ -1592,8 +1609,86 @@ function toggleDark() {
   }
 })();
 
+
+// ── STUDENT ADVICE ──────────────────────────────────────────
+
+let allAdvice = [];
+let filteredAdvice = [];
+let adviceShown = 6;
+let currentAdviceFilter = 'all';
+
+async function loadAdvice() {
+  try {
+    const rows = await dbSelect('submissions', 'select=advice,major,term,year_in_school,courses&order=created_at.desc');
+    allAdvice = rows.filter(r => r.advice && r.advice.trim().length > 10);
+    filterAdvice(currentAdviceFilter, null);
+  } catch(e) {
+    console.warn('Could not load advice:', e);
+  }
+}
+
+function filterAdvice(major, btn) {
+  currentAdviceFilter = major;
+  adviceShown = 6;
+  if (btn) {
+    document.querySelectorAll('#advice-container').forEach(() => {});
+    const btns = document.querySelectorAll('[onclick^="filterAdvice"]');
+    btns.forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  }
+  filteredAdvice = major === 'all' ? allAdvice : allAdvice.filter(r => r.major === major);
+  renderAdvice();
+}
+
+function renderAdvice() {
+  const el = document.getElementById('advice-container');
+  const loadMoreBtn = document.getElementById('advice-load-more');
+
+  if (!filteredAdvice.length) {
+    el.innerHTML = '<p style="font-size:13px;color:var(--text-3);padding:0.5rem 0;">No advice yet for this group — be the first to share!</p>';
+    loadMoreBtn.style.display = 'none';
+    return;
+  }
+
+  const majorColors = {
+    stem: { bg: '#e8f4fb', color: '#185fa5', label: 'STEM' },
+    arts: { bg: 'var(--green-pale)', color: 'var(--green)', label: 'Humanities' },
+    mixed: { bg: '#fff8ee', color: '#854f0b', label: 'Mixed' },
+  };
+
+  const slice = filteredAdvice.slice(0, adviceShown);
+  el.innerHTML = slice.map(r => {
+    const m = majorColors[r.major] || { bg: 'var(--bg)', color: 'var(--text-3)', label: r.major || 'Student' };
+    const meta = [r.year_in_school, r.term].filter(Boolean).join(' · ');
+    const courses = r.courses ? r.courses.split(',').slice(0,3).map(c => c.trim()).join(', ') : '';
+    return `
+      <div style="padding:14px 0;border-bottom:1px solid var(--border);">
+        <div style="display:flex;align-items:flex-start;gap:12px;">
+          <div style="width:36px;height:36px;border-radius:50%;background:${m.bg};display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px;">💬</div>
+          <div style="flex:1;">
+            <p style="font-size:13px;color:var(--text);line-height:1.65;margin-bottom:8px;">"${r.advice.trim()}"</p>
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+              <span style="font-size:10px;padding:2px 8px;border-radius:999px;background:${m.bg};color:${m.color};font-weight:500;">${m.label}</span>
+              ${meta ? `<span style="font-size:11px;color:var(--text-3);">${meta}</span>` : ''}
+              ${courses ? `<span style="font-size:11px;color:var(--text-3);">Took: ${courses}</span>` : ''}
+            </div>
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+
+  // Remove last border
+  loadMoreBtn.style.display = filteredAdvice.length > adviceShown ? 'block' : 'none';
+}
+
+function loadMoreAdvice() {
+  adviceShown += 6;
+  renderAdvice();
+}
+
 initCharts();
 loadDashboard();
+loadAdvice();
 loadCourseRatings();
 </script>
 </body>
