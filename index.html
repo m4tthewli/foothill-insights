@@ -730,15 +730,19 @@ function aggregateRows(rows) {
   for (const [key, arr] of Object.entries(groups)) {
     if (!arr.length) { result[key]=FALLBACK[key]; continue; }
     const avg = f => parseFloat((arr.reduce((s,r)=>s+(parseFloat(r[f])||0),0)/arr.length).toFixed(2));
-    result[key] = { gpa:avg('gpa'), hrs:avg('hours'), stress:avg('stress'), drop:Math.round(arr.filter(r=>r.dropped>0).length/arr.length*100), grades:computeGrades(arr), sv:computeStressVsLoad(arr), count:arr.length };
+    const gpaRows = arr.filter(r => r.gpa !== null && r.gpa !== '' && parseFloat(r.gpa) > 0);
+    const avgGpa = gpaRows.length ? parseFloat((gpaRows.reduce((s,r)=>s+(parseFloat(r.gpa)||0),0)/gpaRows.length).toFixed(2)) : 0;
+    result[key] = { gpa:avgGpa, hrs:avg('hours'), stress:avg('stress'), drop:Math.round(arr.filter(r=>r.dropped>0).length/arr.length*100), grades:computeGrades(arr), sv:computeStressVsLoad(arr), count:arr.length };
   }
   return result;
 }
 
 function computeGrades(arr) {
   const b=[0,0,0,0,0,0];
-  arr.forEach(r=>{ const g=parseFloat(r.gpa)||0; if(g>=3.7)b[0]++; else if(g>=3.3)b[1]++; else if(g>=3.0)b[2]++; else if(g>=2.7)b[3]++; else if(g>=2.0)b[4]++; else b[5]++; });
-  return b.map(v=>Math.round(v/arr.length*100));
+  const withGpa = arr.filter(r => r.gpa !== null && r.gpa !== '' && parseFloat(r.gpa) > 0);
+  if (!withGpa.length) return b;
+  withGpa.forEach(r=>{ const g=parseFloat(r.gpa); if(g>=3.7)b[0]++; else if(g>=3.3)b[1]++; else if(g>=3.0)b[2]++; else if(g>=2.7)b[3]++; else if(g>=2.0)b[4]++; else b[5]++; });
+  return b.map(v=>Math.round(v/withGpa.length*100));
 }
 
 function computeStressVsLoad(arr) {
